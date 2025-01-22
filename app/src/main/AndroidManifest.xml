@@ -24,6 +24,28 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".TaskManagementScreen"
+            android:label="Task Management"
+            android:theme="@style/Theme.WorkNest" />
+
+        <!-- ChatScreenActivity -->
+        <activity
+            android:name=".ChatScreen"
+            android:label="Chat Screen"
+            android:theme="@style/Theme.WorkNest" />
+
+        <!-- ReportsScreenActivity -->
+        <activity
+            android:name=".ReportsScreen"
+            android:label="Reports Screen"
+            android:theme="@style/Theme.WorkNest" />
+
+        <!-- AddEditCrewScreenActivity -->
+        <activity
+            android:name=".CrewManagement"
+            android:label="Add/Edit Crew"
+            android:theme="@style/Theme.WorkNest" />
     </application>
 
 </manifest>
