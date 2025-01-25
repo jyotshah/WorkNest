@@ -11,12 +11,16 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Message
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import android.content.Intent
+import androidx.compose.ui.platform.LocalContext
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,24 +47,35 @@ fun WorkNestApp() {
 
 @Composable
 fun BottomNavigationBar() {
+    val context = LocalContext.current
     NavigationBar {
         NavigationBarItem(
             selected = false,
-            onClick = { CrewManagement() },
+            onClick = { val intent = Intent(context, CrewManagement::class.java)
+                context.startActivity(intent) },
             icon = { Icon(Icons.Filled.Person, contentDescription = "Crew Management") },
             label = { Text("Crew") }
         )
         NavigationBarItem(
             selected = false,
-            onClick = { TaskManagementScreen() },
+            onClick = { val intent = Intent(context, TaskManagementScreen::class.java)
+                context.startActivity(intent) },
             icon = { Icon(Icons.Filled.List, contentDescription = "Task Management") },
             label = { Text("Tasks") }
         )
         NavigationBarItem(
             selected = false,
-            onClick = { ReportsScreen() },
+            onClick = { val intent = Intent(context, ReportsScreen::class.java)
+                context.startActivity(intent) },
             icon = { Icon(Icons.Filled.Description, contentDescription = "Reports") },
             label = { Text("Reports") }
+        )
+        NavigationBarItem(
+            selected = false,
+            onClick = { val intent = Intent(context, ChatScreen::class.java)
+                context.startActivity(intent) },
+            icon = { Icon(Icons.Filled.Message, contentDescription = "Chat Room") },
+            label = { Text("Chats") }
         )
     }
 }

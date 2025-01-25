@@ -60,6 +60,6 @@ dependencies {
     implementation(libs.ui.tooling.preview)
     implementation(libs.material3)
     debugImplementation(libs.ui.tooling)
+    implementation(libs.androidx.navigation.compose)
 
-    }
-
+}
