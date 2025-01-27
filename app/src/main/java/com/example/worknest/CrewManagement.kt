@@ -33,7 +33,7 @@ class CrewManagement : ComponentActivity() {
                 },
                 onEditCrewClick = { crewMember ->
                     val intent = Intent(this, AddEditCrewActivity::class.java).apply {
-                        putExtra("crewId", crewMember.id) // Changed: Pass crew member ID for editing
+                        putExtra("crewId", crewMember.id)
                         putExtra("crewName", crewMember.name)
                         putExtra("crewRole", crewMember.role)
                         putExtra("crewAvailability", crewMember.availability)
@@ -60,20 +60,20 @@ override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) 
         if (requestCode == ADD_CREW_REQUEST) {
             // Changed: Handle adding new crew member
             val newCrewMember = CrewMember(
-                id = crewList.size + 1,  // Changed: Generate new ID for new crew member
+                id = crewList.size + 1,
                 name = name,
                 role = role,
                 availability = availability
             )
-            crewList.add(newCrewMember) // Changed: Add new crew member to list
-            Toast.makeText(this, "Crew Member Added", Toast.LENGTH_SHORT).show() // Changed: Toast message on add
+            crewList.add(newCrewMember)
+            Toast.makeText(this, "Crew Member Added", Toast.LENGTH_SHORT).show()
         } else if (requestCode == EDIT_CREW_REQUEST && crewId != -1) {
-            // Changed: Handle editing existing crew member
+
             val crewMemberIndex = crewList.indexOfFirst { it.id == crewId }
             if (crewMemberIndex != -1) {
                 val updatedCrew = crewList[crewMemberIndex].copy(name = name, role = role, availability = availability)
                 crewList[crewMemberIndex] = updatedCrew // Changed: Update crew member in the list
-                Toast.makeText(this, "Crew Member Updated", Toast.LENGTH_SHORT).show() // Changed: Toast message on edit
+                Toast.makeText(this, "Crew Member Updated", Toast.LENGTH_SHORT).show()
             }
         }
     }
