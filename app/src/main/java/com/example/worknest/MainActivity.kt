@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import android.content.Intent
+import androidx.compose.material.icons.filled.Money
 import androidx.compose.ui.platform.LocalContext
 
 
@@ -65,17 +66,10 @@ fun BottomNavigationBar() {
         )
         NavigationBarItem(
             selected = false,
-            onClick = { val intent = Intent(context, ReportsScreen::class.java)
+            onClick = { val intent = Intent(context, ExpenseScreen::class.java)
                 context.startActivity(intent) },
-            icon = { Icon(Icons.Filled.Description, contentDescription = "Reports") },
-            label = { Text("Reports") }
-        )
-        NavigationBarItem(
-            selected = false,
-            onClick = { val intent = Intent(context, ChatScreen::class.java)
-                context.startActivity(intent) },
-            icon = { Icon(Icons.Filled.Message, contentDescription = "Chat Room") },
-            label = { Text("Chats") }
+            icon = { Icon(Icons.Filled.Money, contentDescription = "Expenses") },
+            label = { Text("Expenses") }
         )
     }
 }
@@ -133,20 +127,6 @@ fun HomePage(modifier: Modifier = Modifier) {
         ) {
             items(recentTasks) { task ->
                 TaskItem(task = task)
-            }
-        }
-
-        // Add Task/Project Button
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            FloatingActionButton(
-                onClick = { TaskManagementScreen() },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            ) {
-                Icon(Icons.Filled.Add, contentDescription = "Add Task or Project")
             }
         }
     }

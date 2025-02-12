@@ -17,6 +17,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+
 
 data class Task(
     val id: Int,
@@ -42,7 +53,7 @@ class TaskManagementScreen : ComponentActivity() {
 @Composable
 fun TaskManagementScreenUI(taskList: MutableList<Task>) {
     var showAddTaskForm by remember { mutableStateOf(false) }
-    var selectedTask by remember { mutableStateOf<Task?>(null) }
+    var selectedTask by remember { mutableStateOf<  Task?>(null) }
     var showToast by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
@@ -56,33 +67,35 @@ fun TaskManagementScreenUI(taskList: MutableList<Task>) {
             taskToEdit = selectedTask,
             onSaveTask = { task ->
                 if (selectedTask == null) {
-                    taskList.add(task) // Add the task to the list
-                    showToast = true // Trigger the toast to show the task was added
+                    taskList.add(task)
+                    showToast = true
                 } else {
-                    taskList[taskList.indexOf(selectedTask)] = task // Update the existing task
-                    showToast = true // Trigger the toast for update
+                    taskList[taskList.indexOf(selectedTask)] = task
+                    showToast = true
                 }
-                showAddTaskForm = false // Close the form after saving
+                showAddTaskForm = false
                 selectedTask = null
             },
-            onCancel = {
-                showAddTaskForm = false // Close the form if canceled
-            },
+            onCancel = { showAddTaskForm = false },
             onDeleteTask = { task ->
-                taskList.remove(task) // Remove the task from the list
-                showToast = true // Trigger the toast for task deletion
-                showAddTaskForm = false // Close the form after deletion
+                taskList.remove(task)
+                showToast = true
+                showAddTaskForm = false
                 selectedTask = null
             }
         )
     } else {
-        // Main screen with task list and "Add New Task" button
         Column(modifier = Modifier.padding(16.dp)) {
             Text("Task Management", style = MaterialTheme.typography.titleMedium)
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            LazyColumn {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2), // 2 tasks per row
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
                 items(taskList) { task ->
                     TaskItem(
                         task = task,
@@ -94,30 +107,36 @@ fun TaskManagementScreenUI(taskList: MutableList<Task>) {
                     )
                 }
             }
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Add New Task button
-            Button(onClick = {
-                showAddTaskForm = true // Show the task form when clicked
-            }) {
-                Text("Add New Task")
+                // Add New Task button
+                Button(onClick = { showAddTaskForm = true }) {
+                    Text("Add New Task")
+                }
             }
         }
     }
-}
+
 
 @Composable
 fun TaskItem(task: Task, taskNumber: Int, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
+            .padding(8.dp)
             .clickable { onClick() }
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text("Task $taskNumber: ${task.taskName}", style = MaterialTheme.typography.titleMedium)
             Text("Priority: ${task.taskPriority}", style = MaterialTheme.typography.bodyLarge)
+
+            // Progress Bar Widget
+            Spacer(modifier = Modifier.height(8.dp))
+            LinearProgressIndicator(
+                progress = task.progress / 100f,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Text("Progress: ${task.progress}%", style = MaterialTheme.typography.bodySmall)
         }
     }
 }
