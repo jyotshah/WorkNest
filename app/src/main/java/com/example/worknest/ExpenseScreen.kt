@@ -1,3 +1,11 @@
+/*
+Students Name : Jyot Shah & Ashwini Gunaga
+Students Number : 8871717 & 8888180
+Assignment : A01
+Date : 2/13/2025
+File : ExpenseScreen.kt
+*/
+
 package com.example.worknest
 
 import android.net.Uri
@@ -23,6 +31,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import java.util.Calendar
 
+
+//Define all the fields for an expense
 data class Expense(val name: String, val category: String, val amount: Double, val date: String)
 
 class ExpenseScreen : ComponentActivity() {
@@ -38,10 +48,13 @@ class ExpenseScreen : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+// Function: CrewListScreen
+// Description: Displays a table with all the expenses and provides an option to add new expenses
 fun ShowExpenses() {
     var expenses by rememberSaveable { mutableStateOf(currentExpenses().toMutableList()) }
     var showDialog by remember { mutableStateOf(false) }
     Scaffold(
+        //Showing the title of the screen
         topBar = {
             TopAppBar(
                 title = { Text("\uD83D\uDCB0 Expense Tracker", fontWeight = FontWeight.Bold, fontSize = 20.sp) },
@@ -76,6 +89,7 @@ fun ShowExpenses() {
         }
     }
     if (showDialog) {
+        //Go to prompt on clicking the button
         AddExpenseDialog(
             onAddExpense = { newExpense ->
                 expenses.add(newExpense)
@@ -87,6 +101,8 @@ fun ShowExpenses() {
 
 }
 
+// Function: AddExpenseDialog
+// Description: A new screen to add details of an expense, it includes a date picker and slider for the amount
 @Composable
 fun AddExpenseDialog(onAddExpense: (Expense) -> Unit, onDismiss: () -> Unit) {
     var name by remember { mutableStateOf("") }
@@ -129,6 +145,7 @@ fun AddExpenseDialog(onAddExpense: (Expense) -> Unit, onDismiss: () -> Unit) {
             }
         },
         confirmButton = {
+            //Check if all the input is provided
             Button(onClick = {
                 if (name.isNotEmpty() && category.isNotEmpty() && date.isNotEmpty()) {
                     onAddExpense(Expense(name, category, amount.toDouble(), date))
@@ -144,8 +161,8 @@ fun AddExpenseDialog(onAddExpense: (Expense) -> Unit, onDismiss: () -> Unit) {
         }
     )
 }
-
-// Amount Slider Component
+// Function: AmountSlider
+// Description: Formatting and functionality of the slider to choose amount
 @Composable
 fun AmountSlider(amount: Float, onAmountChange: (Float) -> Unit) {
     Column {
@@ -163,6 +180,8 @@ fun AmountSlider(amount: Float, onAmountChange: (Float) -> Unit) {
     }
 }
 
+// Function: ExpenseTable
+// Description: Display the table header and contents
 @Composable
 fun ExpenseTable(expenses: List<Expense>) {
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -190,6 +209,8 @@ fun ExpenseTable(expenses: List<Expense>) {
     }
 }
 
+// Function: TableHeader
+// Description: Formatting for the header
 @Composable
 fun TableHeader(text: String, modifier: Modifier) {
     Text(
@@ -201,6 +222,8 @@ fun TableHeader(text: String, modifier: Modifier) {
     )
 }
 
+// Function: ExpenseRow
+// Description: Formatting for the rows in the table
 @Composable
 fun ExpenseRow(expense: Expense) {
     Row(
@@ -216,7 +239,8 @@ fun ExpenseRow(expense: Expense) {
     }
 }
 
-
+// Function: currentExpenses
+// Description: Display sample examples in the table
 fun currentExpenses(): List<Expense> {
     return listOf(
         Expense("Produce", "Food", 500.0, "2025-02-10"),
