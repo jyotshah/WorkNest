@@ -4,6 +4,7 @@ import android.media.Image
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -12,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import java.util.Calendar
 
@@ -29,7 +31,7 @@ class ExpenseScreen : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShowExpenses() {
-    var expenses by remember { mutableStateOf(CurrentExpenses()) }
+    var expenses by remember { mutableStateOf(currentExpenses()) }
     var showDialog by remember { mutableStateOf(false) }
     Scaffold(
         topBar = { TopAppBar(title = { Text("Expenses") }) },
@@ -126,7 +128,10 @@ fun ExpenseTable(expenses: List<Expense>) {
     Column(modifier = Modifier.fillMaxWidth()) {
         // Table Header
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             TableHeader("Expense")
@@ -134,12 +139,12 @@ fun ExpenseTable(expenses: List<Expense>) {
             TableHeader("Amount")
             TableHeader("Date")
         }
-        HorizontalDivider()
+        Divider(color = Color.Gray, thickness = 1.dp)
 
-        // Table Rows
+        // Expense Rows
         LazyColumn {
             items(expenses) { expense ->
-                ExpenseRow(expense)
+                ExpenseRow(expense = expense)
             }
         }
     }
@@ -166,7 +171,7 @@ fun ExpenseRow(expense: Expense) {
 }
 
 
-fun CurrentExpenses(): List<Expense> {
+fun currentExpenses(): List<Expense> {
     return listOf(
         Expense("Produce", "Food", 500.0, "2025-02-10"),
         Expense("Dairy", "Beverages", 300.0, "2025-02-11")
