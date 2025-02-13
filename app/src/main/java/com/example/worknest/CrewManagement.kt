@@ -163,7 +163,7 @@ fun AddCrewDialog(
     onAvailabilityChange: (String) -> Unit
 ) {
     val availableRoles = listOf("" +
-            "Manager", "Chef", "Sous Chef","Pastery Chef", "Line Cook", "Bartender", "Server", "Dishwasher", "Cashier", "Dishwasher")
+            "Manager", "Chef", "Sous Chef","Pastry Chef", "Line Cook", "Bartender", "Server", "Dishwasher", "Cashier", "Dishwasher")
 
     AlertDialog(
         onDismissRequest = onDismiss,
