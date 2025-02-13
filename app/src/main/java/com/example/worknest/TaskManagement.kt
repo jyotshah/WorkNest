@@ -1,3 +1,10 @@
+/*
+Students Name : Jyot Shah & Ashwini Gunaga
+Students Number : 8871717 & 8888180
+Assignment : A01
+Date : 2/13/2025
+File : TaskManagement.kt
+*/
 package com.example.worknest
 
 import android.os.Bundle
@@ -22,6 +29,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
+//Data class : Task
+//Description: Represents a task with name, description, priority, and completion status.
 class TaskManagement : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,6 +40,8 @@ class TaskManagement : ComponentActivity() {
     }
 }
 
+//Function : TaskManagementScreen
+//Description: Displays a list of tasks with options to edit, delete, and mark as completed.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskManagementScreen() {
@@ -155,6 +166,8 @@ fun TaskManagementScreen() {
 
 data class Task(val name: String, val description: String, val priority: String, val completed: Boolean)
 
+// Function: PriorityDropdown
+// Description: Dropdown menu for selecting task priority.(Spinner)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PriorityDropdown(selectedPriority: String, onPrioritySelected: (String) -> Unit) {
@@ -202,6 +215,8 @@ fun PriorityDropdown(selectedPriority: String, onPrioritySelected: (String) -> U
     }
 }
 
+// Function: TaskCard
+// Description: Displays a task with options to edit, delete, and mark as completed.
 @Composable
 fun TaskCard(
     task: Task,
@@ -231,6 +246,7 @@ fun TaskCard(
     Divider(modifier = Modifier.padding(vertical = 8.dp))
 }
 
+//Preview : TaskManagementScreen
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {

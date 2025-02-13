@@ -1,3 +1,10 @@
+/*
+Students Name : Jyot Shah & Ashwini Gunaga
+Students Number : 8871717 & 8888180
+Assignment : A01
+Date : 2/13/2025
+File : MainActivity.kt
+*/
 package com.example.worknest
 
 import android.os.Bundle
@@ -24,16 +31,20 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-
+// Function Name: onCreate
+// Function Description: Starts the activity and sets the content view to the WorkNestApp composable.
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            // Set the WorkNestApp composable as the content view
             WorkNestApp()
         }
     }
 }
 
+// Function Name: WorkNestApp
+// Function Description: A composable that creates the app's scaffold with top bar, bottom bar, and main content.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WorkNestApp() {
@@ -50,16 +61,21 @@ fun WorkNestApp() {
                 )
             )
         },
+        // Bottom navigation bar for app navigation
         bottomBar = { BottomNavigationBar() }
     ) { innerPadding ->
+        // Main content of the app
         HomePage(modifier = Modifier.padding(innerPadding))
     }
 }
 
+// Function Name: BottomNavigationBar
+// Function Description: Composable to display the bottom navigation bar with three navigation items: Crew, Tasks, and Expenses.
 @Composable
 fun BottomNavigationBar() {
     val context = LocalContext.current
     NavigationBar {
+        // Navigation item for Crew Management
         NavigationBarItem(
             selected = false,
             onClick = { val intent = Intent(context, CrewManagement::class.java)
@@ -67,6 +83,7 @@ fun BottomNavigationBar() {
             icon = { Icon(Icons.Filled.Person, contentDescription = "Crew Management") },
             label = { Text("Crew") }
         )
+        // Navigation item for Task Management
         NavigationBarItem(
             selected = false,
             onClick = {
@@ -76,7 +93,7 @@ fun BottomNavigationBar() {
             icon = { Icon(Icons.Filled.List, contentDescription = "Task Management") },
             label = { Text("Tasks") }
         )
-
+        // Navigation item for Expense Management
         NavigationBarItem(
             selected = false,
             onClick = { val intent = Intent(context, ExpenseScreen::class.java)
@@ -87,6 +104,8 @@ fun BottomNavigationBar() {
     }
 }
 
+// Function Name: HomePage
+// Function Description: The main content of the home page, displaying statistics and recent tasks
 @Composable
 fun HomePage(modifier: Modifier = Modifier) {
     // Example data
@@ -105,6 +124,7 @@ fun HomePage(modifier: Modifier = Modifier) {
             )
             .padding(16.dp)
     ) {
+        // App Title
         Text(
             text = "📊 Quick Stats",
             style = MaterialTheme.typography.titleMedium,
@@ -138,7 +158,8 @@ fun HomePage(modifier: Modifier = Modifier) {
     }
 }
 
-
+// Function Name: StatCard
+// Function Description: Displays a stat card with a label and a value (e.g., Crew Members, Pending Tasks).
 @Composable
 fun StatCard(label: String, value: Int, modifier: Modifier = Modifier) {
     Card(
@@ -157,6 +178,8 @@ fun StatCard(label: String, value: Int, modifier: Modifier = Modifier) {
     }
 }
 
+// Function Name: TaskItem
+// Function Description: Displays a single task in a list with a task name and an icon.
 @Composable
 fun TaskItem(task: String, modifier: Modifier = Modifier) {
     Card(
