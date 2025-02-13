@@ -39,7 +39,7 @@ fun ShowExpenses() {
                 content = { Text("+") }
             )
         }
-        )  { paddingValues ->
+    )  { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -47,8 +47,8 @@ fun ShowExpenses() {
                 .padding(16.dp)
         )   {
             ExpenseTable(expenses)
-            }
-         }
+        }
+    }
     if (showDialog) {
         AddExpenseDialog(
             onAddExpense = { newExpense ->
