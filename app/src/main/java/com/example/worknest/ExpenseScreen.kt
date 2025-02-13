@@ -12,9 +12,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import java.util.Calendar
 
 data class Expense(val name: String, val category: String, val amount: Double, val date: String)
@@ -23,7 +28,9 @@ class ExpenseScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            ShowExpenses()
+            MaterialTheme {
+                ShowExpenses()
+            }
         }
     }
 }
@@ -34,20 +41,36 @@ fun ShowExpenses() {
     var expenses by rememberSaveable { mutableStateOf(currentExpenses().toMutableList()) }
     var showDialog by remember { mutableStateOf(false) }
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Expenses") }) },
-        floatingActionButton = {        //Button to add a new expense
+        topBar = {
+            TopAppBar(
+                title = { Text("\uD83D\uDCB0 Expense Tracker", fontWeight = FontWeight.Bold, fontSize = 20.sp) },
+                colors = TopAppBarDefaults.mediumTopAppBarColors(
+                    containerColor = Color(0xFF00796B),
+                    titleContentColor = Color.White
+                )
+            )
+        },
+        floatingActionButton = {
             FloatingActionButton(
                 onClick = { showDialog = true },
-                content = { Text("+") }
-            )
+                containerColor = Color(0xFF00796B),
+                contentColor = Color.White
+            ) {
+                Icon(Icons.Filled.Add, contentDescription = "Add Expense")
+            }
         }
-    )  { paddingValues ->
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(Color(0xFFE0F2F1), Color(0xFFB2DFDB))
+                    )
+                )
                 .padding(paddingValues)
                 .padding(16.dp)
-        )   {
+        ) {
             ExpenseTable(expenses)
         }
     }
@@ -85,7 +108,7 @@ fun AddExpenseDialog(onAddExpense: (Expense) -> Unit, onDismiss: () -> Unit) {
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add Expense") },
+        title = { Text("Add Expense", fontWeight = FontWeight.Bold) },
         text = {
             Column {
                 OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Expense Name") })
@@ -99,7 +122,7 @@ fun AddExpenseDialog(onAddExpense: (Expense) -> Unit, onDismiss: () -> Unit) {
 
                 // Date Picker Button
                 Button(onClick = { datePickerDialog.show() }) {
-                    Text(if (date.isEmpty()) "Pick Date" else "Date: $date")
+                    Text(if (date.isEmpty()) "\uD83D\uDCC6 Pick Date" else "\uD83D\uDCC6 Date: $date")
                 }
                 Spacer(modifier = Modifier.height(8.dp))
             }
@@ -125,12 +148,16 @@ fun AddExpenseDialog(onAddExpense: (Expense) -> Unit, onDismiss: () -> Unit) {
 @Composable
 fun AmountSlider(amount: Float, onAmountChange: (Float) -> Unit) {
     Column {
-        Text("Amount: $${amount.toInt()}", modifier = Modifier.padding(8.dp))
+        Text("\uD83D\uDCB5 Amount: $${amount.toInt()}", modifier = Modifier.padding(8.dp))
         Slider(
             value = amount,
             onValueChange = onAmountChange,
             valueRange = 0f..1000f,
-            steps = 9 // Increments of 100
+            steps = 9,
+            colors = SliderDefaults.colors(
+                thumbColor = Color(0xFF00796B),
+                activeTrackColor = Color(0xFF004D40)
+            )
         )
     }
 }
@@ -138,47 +165,61 @@ fun AmountSlider(amount: Float, onAmountChange: (Float) -> Unit) {
 @Composable
 fun ExpenseTable(expenses: List<Expense>) {
     Column(modifier = Modifier.fillMaxWidth()) {
-        // Table Header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp)
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
+                .padding(8.dp)
+                .background(Color(0xFF00796B)),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            TableHeader("Expense")
-            TableHeader("Category")
-            TableHeader("Amount")
-            TableHeader("Date")
+            TableHeader("📝 Expense", Color.White)
+            TableHeader("📂 Category", Color.White)
+            TableHeader("💰 Amount", Color.White)
+            TableHeader("📅 Date", Color.White)
         }
-        Divider(color = Color.Gray, thickness = 1.dp)
 
-        // Expense Rows
+        Divider(color = Color.Gray, thickness = 2.dp)
+
         LazyColumn {
             items(expenses) { expense ->
-                ExpenseRow(expense = expense)
+                ExpenseRow(expense)
             }
         }
     }
 }
 
 @Composable
-fun TableHeader(text: String) {
-    Text(text = text, style = MaterialTheme.typography.titleMedium)
+fun TableHeader(text: String, color:Color) {
+    Text(
+        text = text,
+        fontSize = 16.sp,
+        fontWeight = FontWeight.Bold,
+        color = color,
+        modifier = Modifier
+            .padding(8.dp)
+    )
 }
 
 @Composable
 fun ExpenseRow(expense: Expense) {
-    Row(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(6.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFE0F2F1)),
+        elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        Text(text = expense.name, modifier = Modifier.weight(1f))
-        Text(text = expense.category, modifier = Modifier.weight(1f))
-        Text(text = "$${expense.amount}", modifier = Modifier.weight(1f))
-        Text(text = expense.date, modifier = Modifier.weight(1f))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(text = expense.name, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
+            Text(text = expense.category, modifier = Modifier.weight(1f), color = Color(0xFF004D40))
+            Text(text = "$${expense.amount}", modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold, color = Color(0xFF00796B))
+            Text(text = expense.date, modifier = Modifier.weight(1f), color = Color.Gray)
+        }
     }
 }
 
