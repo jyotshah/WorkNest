@@ -1,3 +1,10 @@
+/*
+Students Name : Jyot Shah & Ashwini Gunaga
+Students Number : 8871717 & 8888180
+Assignment : A01
+Date : 2/13/2025
+File : ExpenseScreen.kt
+*/
 package com.example.worknest
 
 import android.net.Uri
@@ -21,7 +28,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import java.util.Calendar
-
+// Function: Expense
+// Description: Data class to represent an expense with name, category, amount, and date.
 data class Expense(val name: String, val category: String, val amount: Double, val date: String)
 
 class ExpenseScreen : ComponentActivity() {
@@ -35,6 +43,8 @@ class ExpenseScreen : ComponentActivity() {
     }
 }
 
+// Function name: ShowExpenses
+// Function description: Displays the list of expenses and a floating button to add a new expense.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShowExpenses() {
@@ -86,6 +96,8 @@ fun ShowExpenses() {
 
 }
 
+// Function name: AddExpenseDialog
+// Function description: Displays a dialog to input a new expense, including name, category, amount, date, and receipt.
 @Composable
 fun AddExpenseDialog(onAddExpense: (Expense) -> Unit, onDismiss: () -> Unit) {
     var name by remember { mutableStateOf("") }
@@ -144,7 +156,8 @@ fun AddExpenseDialog(onAddExpense: (Expense) -> Unit, onDismiss: () -> Unit) {
     )
 }
 
-// Amount Slider Component
+// Function name: AmountSlider
+// Function description: Displays a slider for setting the amount of the expense.
 @Composable
 fun AmountSlider(amount: Float, onAmountChange: (Float) -> Unit) {
     Column {
@@ -162,9 +175,12 @@ fun AmountSlider(amount: Float, onAmountChange: (Float) -> Unit) {
     }
 }
 
+// Function name: ExpenseTable
+// Function description: Displays a table with expense data including expense name, category, amount, and date.
 @Composable
 fun ExpenseTable(expenses: List<Expense>) {
     Column(modifier = Modifier.fillMaxWidth()) {
+        // Table Header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -180,6 +196,7 @@ fun ExpenseTable(expenses: List<Expense>) {
 
         Divider(color = Color.Gray, thickness = 2.dp)
 
+        // Expense Rows
         LazyColumn {
             items(expenses) { expense ->
                 ExpenseRow(expense)
@@ -188,6 +205,8 @@ fun ExpenseTable(expenses: List<Expense>) {
     }
 }
 
+// Function name: TableHeader
+// Function description: Displays a header in the expense table.
 @Composable
 fun TableHeader(text: String, color:Color) {
     Text(
@@ -200,6 +219,8 @@ fun TableHeader(text: String, color:Color) {
     )
 }
 
+// Function name: ExpenseRow
+// Function description: Displays a row representing a single expense in the expense table.
 @Composable
 fun ExpenseRow(expense: Expense) {
     Card(
@@ -223,7 +244,8 @@ fun ExpenseRow(expense: Expense) {
     }
 }
 
-
+// Function: currentExpenses
+// Description: Provides a default list of expenses.
 fun currentExpenses(): List<Expense> {
     return listOf(
         Expense("Produce", "Food", 500.0, "2025-02-10"),
