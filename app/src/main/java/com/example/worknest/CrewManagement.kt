@@ -19,8 +19,8 @@ data class CrewMember(val id: Int, val name: String, var role: String, val avail
 
 class CrewManagement : ComponentActivity() {
     private val crewList = mutableStateListOf<CrewMember>( // Initial list of crew members
-        CrewMember(1, "Alice", "Pilot", "Available"),
-        CrewMember(2, "Bob", "Engineer", "Unavailable")
+        CrewMember(1, "Alice", "Manager", "Available"),
+        CrewMember(2, "Bob", "Chef", "Unavailable")
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -162,7 +162,8 @@ fun AddCrewDialog(
     availability: String,
     onAvailabilityChange: (String) -> Unit
 ) {
-    val availableRoles = listOf("Waiter", "Chef", "Manager", "Cashier", "Dishwasher")
+    val availableRoles = listOf("" +
+            "Manager", "Chef", "Sous Chef","Pastery Chef", "Line Cook", "Bartender", "Server", "Dishwasher", "Cashier", "Dishwasher")
 
     AlertDialog(
         onDismissRequest = onDismiss,
