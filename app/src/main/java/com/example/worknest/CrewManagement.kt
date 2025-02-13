@@ -1,3 +1,10 @@
+/*
+Students Name : Jyot Shah & Ashwini Gunaga
+Students Number : 8871717 & 8888180
+Assignment : A01
+Date : 2/13/2025
+File : CrewManagement.kt
+*/
 package com.example.worknest
 
 import android.os.Bundle
@@ -20,14 +27,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+// Data class representing  crew member
 data class CrewMember(val id: Int, val name: String, var role: String, val availability: String)
 
 class CrewManagement : ComponentActivity() {
-    private val crewList = mutableStateListOf<CrewMember>( // Initial list of crew members
+    private val crewList = mutableStateListOf<CrewMember>(
         CrewMember(1, "Alice", "Manager", "Available"),
         CrewMember(2, "Bob", "Chef", "Unavailable")
     )
 
+    // Function: onCreate
+    // Description: Initializes the application and the UI content
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -54,6 +64,8 @@ class CrewManagement : ComponentActivity() {
     }
 }
 
+// Function: CrewListScreen
+// Description: Displays the list of crew members and provides options to add, edit, or delete them
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CrewListScreen(
@@ -107,7 +119,6 @@ fun CrewListScreen(
                 }
             }
 
-            // Dialog for adding a new crew member
             if (showDialog) {
                 AddCrewDialog(
                     onDismiss = { showDialog = false },
@@ -124,7 +135,6 @@ fun CrewListScreen(
                 )
             }
 
-            // Dialog for editing an existing crew member
             crewMemberToEdit?.let { crew ->
                 EditCrewDialog(
                     crewMember = crew,
@@ -139,6 +149,8 @@ fun CrewListScreen(
     }
 }
 
+// Function: CrewMemberCard
+// Description: Displays information about a crew member with edit and delete options
 @Composable
 fun CrewMemberCard(
     crewMember: CrewMember,
@@ -170,6 +182,8 @@ fun CrewMemberCard(
 }
 
 
+// Function: AddCrewDialog
+// Description: Box for adding a new crew member with fields for name, role, and availability.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddCrewDialog(
@@ -238,6 +252,8 @@ fun AddCrewDialog(
     )
 }
 
+// Function: EditCrewDialog
+// Description: Box for editing an existing crew member's details.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditCrewDialog(
