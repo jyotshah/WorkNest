@@ -1,6 +1,7 @@
 package com.example.worknest
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
@@ -10,9 +11,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 
 class TaskManagement : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,20 +27,25 @@ class TaskManagement : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskManagementScreen() {
-    // States for the task's title, description and the task list
+    val context = LocalContext.current
     var taskName by remember { mutableStateOf("") }
     var taskDescription by remember { mutableStateOf("") }
-    var tasks by remember { mutableStateOf(listOf<Task>()) }
+    var selectedPriority by remember { mutableStateOf("Medium") }
+    var tasks = remember { mutableStateListOf<Task>() }
 
-    // Function to save a new task
     val saveTask: () -> Unit = {
-        // Create a new task object and add it to the task list
-        val newTask = Task(taskName, taskDescription, false) // Initially set to not completed
-        tasks = tasks + newTask
-        taskName = ""  // Clear the input fields after saving
-        taskDescription = ""
+        if (taskName.isNotBlank() && taskDescription.isNotBlank()) {
+            tasks.add(Task(taskName, taskDescription, selectedPriority, false))
+            Toast.makeText(context, "Task saved successfully", Toast.LENGTH_SHORT).show()
+            taskName = ""
+            taskDescription = ""
+            selectedPriority = "Medium"
+        } else {
+            Toast.makeText(context, "Please enter task details", Toast.LENGTH_SHORT).show()
+        }
     }
 
     Column(
@@ -44,36 +53,30 @@ fun TaskManagementScreen() {
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Screen Title
         Text(
             text = "Task Management",
             style = MaterialTheme.typography.headlineLarge,
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
-        // Task Creation/Editing Section
-
-        // 1. Task Name Input Field
         OutlinedTextField(
             value = taskName,
             onValueChange = { taskName = it },
             label = { Text("Enter task name") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp)
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
         )
 
-        // 2. Task Description Input Field
         OutlinedTextField(
             value = taskDescription,
             onValueChange = { taskDescription = it },
             label = { Text("Enter task description") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp)
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
         )
 
-        // Save Button
+        PriorityDropdown(selectedPriority) { priority ->
+            selectedPriority = priority
+        }
+
         Button(
             onClick = saveTask,
             modifier = Modifier.padding(vertical = 8.dp)
@@ -83,47 +86,102 @@ fun TaskManagementScreen() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Display saved tasks with checkboxes
         tasks.forEachIndexed { index, task ->
-            TaskCard(task, onCheckedChange = { checked ->
-                tasks = tasks.toMutableList().apply {
-                    this[index] = task.copy(completed = checked) // Update the task's completion status
+            TaskCard(
+                task,
+                onCheckedChange = { checked ->
+                    tasks[index] = task.copy(completed = checked)
+                },
+                onEdit = {
+                    taskName = task.name
+                    taskDescription = task.description
+                    selectedPriority = task.priority
+                    tasks.removeAt(index)
+                    Toast.makeText(context, "Task moved to edit", Toast.LENGTH_SHORT).show()
+                },
+                onDelete = {
+                    tasks.removeAt(index)
+                    Toast.makeText(context, "Task deleted", Toast.LENGTH_SHORT).show()
                 }
-            })
+            )
         }
     }
 }
 
-// Task data class
-data class Task(val name: String, val description: String, val completed: Boolean)
+data class Task(val name: String, val description: String, val priority: String, val completed: Boolean)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PriorityDropdown(selectedPriority: String, onPrioritySelected: (String) -> Unit) {
+    val priorities = listOf("Low", "Medium", "High")
+    var expanded by remember { mutableStateOf(false) }
+
+    // This will represent the selected item in the spinner
+    val label = "Priority: $selectedPriority"
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded },
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        OutlinedTextField(
+            value = label,
+            onValueChange = {},
+            readOnly = true,  // Makes it read-only to mimic a spinner
+            label = { Text("Select Priority") },
+            trailingIcon = {
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = null
+                )
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor()
+        )
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            priorities.forEach { priority ->
+                DropdownMenuItem(
+                    text = { Text(priority) },
+                    onClick = {
+                        onPrioritySelected(priority)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
 
 @Composable
-fun TaskCard(task: Task, onCheckedChange: (Boolean) -> Unit) {
+fun TaskCard(
+    task: Task,
+    onCheckedChange: (Boolean) -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
     ) {
-        // Checkbox for task completion
         Checkbox(
             checked = task.completed,
             onCheckedChange = onCheckedChange
         )
         Spacer(modifier = Modifier.width(8.dp))
-        Column {
-            Text(
-                text = "Task: ${task.name}",
-                style = MaterialTheme.typography.bodyLarge
-            )
-            Text(
-                text = "Description: ${task.description}",
-                style = MaterialTheme.typography.bodyMedium
-            )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = "Task: ${task.name}", style = MaterialTheme.typography.bodyLarge)
+            Text(text = "Description: ${task.description}", style = MaterialTheme.typography.bodyMedium)
+            Text(text = "Priority: ${task.priority}", color = Color.Blue, style = MaterialTheme.typography.bodyMedium)
         }
+        Spacer(modifier = Modifier.width(8.dp))
+        Button(onClick = onEdit) { Text("Edit") }
+        Spacer(modifier = Modifier.width(4.dp))
+        Button(onClick = onDelete, colors = ButtonDefaults.buttonColors(Color.Red)) { Text("Delete") }
     }
     Divider(modifier = Modifier.padding(vertical = 8.dp))
 }
