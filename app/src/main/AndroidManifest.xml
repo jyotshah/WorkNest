@@ -25,20 +25,14 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".TaskManagementScreen"
+            android:name=".TaskManagement"
             android:label="Task Management"
             android:theme="@style/Theme.WorkNest" />
 
-        <!-- ChatScreenActivity -->
+        <!-- ExpenseScreenActivity -->
         <activity
-            android:name=".ChatScreen"
-            android:label="Chat Screen"
-            android:theme="@style/Theme.WorkNest" />
-
-        <!-- ReportsScreenActivity -->
-        <activity
-            android:name=".ReportsScreen"
-            android:label="Reports Screen"
+            android:name=".ExpenseScreen"
+            android:label="Expense Screen"
             android:theme="@style/Theme.WorkNest" />
 
         <!-- AddEditCrewScreenActivity -->

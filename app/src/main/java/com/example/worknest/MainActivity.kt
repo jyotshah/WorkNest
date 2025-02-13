@@ -59,11 +59,14 @@ fun BottomNavigationBar() {
         )
         NavigationBarItem(
             selected = false,
-            onClick = { val intent = Intent(context, TaskManagementScreen::class.java)
-                context.startActivity(intent) },
+            onClick = {
+                val intent = Intent(context, TaskManagement::class.java)
+                context.startActivity(intent)
+            },
             icon = { Icon(Icons.Filled.List, contentDescription = "Task Management") },
             label = { Text("Tasks") }
         )
+
         NavigationBarItem(
             selected = false,
             onClick = { val intent = Intent(context, ExpenseScreen::class.java)
