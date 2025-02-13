@@ -1,11 +1,10 @@
 package com.example.worknest
 
-import android.media.Image
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import java.util.Calendar
@@ -31,7 +31,7 @@ class ExpenseScreen : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShowExpenses() {
-    var expenses by remember { mutableStateOf(currentExpenses()) }
+    var expenses by rememberSaveable { mutableStateOf(currentExpenses().toMutableList()) }
     var showDialog by remember { mutableStateOf(false) }
     Scaffold(
         topBar = { TopAppBar(title = { Text("Expenses") }) },
@@ -54,7 +54,7 @@ fun ShowExpenses() {
     if (showDialog) {
         AddExpenseDialog(
             onAddExpense = { newExpense ->
-                expenses = expenses + newExpense
+                expenses.add(newExpense)
                 showDialog = false
             },
             onDismiss = { showDialog = false }
@@ -67,8 +67,10 @@ fun ShowExpenses() {
 fun AddExpenseDialog(onAddExpense: (Expense) -> Unit, onDismiss: () -> Unit) {
     var name by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("") }
-    var amount by remember { mutableStateOf("") }
+    var amount by remember { mutableStateOf(50f) } // Default slider value
     var date by remember { mutableStateOf("") }
+
+    var receiptUri by remember { mutableStateOf<Uri?>(null) }
 
     val context = LocalContext.current
 
@@ -81,7 +83,6 @@ fun AddExpenseDialog(onAddExpense: (Expense) -> Unit, onDismiss: () -> Unit) {
         calendar.get(Calendar.DAY_OF_MONTH)
     )
 
-
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Add Expense") },
@@ -91,8 +92,8 @@ fun AddExpenseDialog(onAddExpense: (Expense) -> Unit, onDismiss: () -> Unit) {
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(value = category, onValueChange = { category = it }, label = { Text("Category") })
                 Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(value = amount, onValueChange = { amount = it }, label = { Text("Amount") })
-                Spacer(modifier = Modifier.height(8.dp))
+                // Amount Slider
+                AmountSlider(amount, onAmountChange = { amount = it })
                 OutlinedTextField(value = date, onValueChange = { date = it }, label = { Text("Date") })
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -101,14 +102,11 @@ fun AddExpenseDialog(onAddExpense: (Expense) -> Unit, onDismiss: () -> Unit) {
                     Text(if (date.isEmpty()) "Pick Date" else "Date: $date")
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-
-                //Image Picker
-
             }
         },
         confirmButton = {
             Button(onClick = {
-                if (name.isNotEmpty() && category.isNotEmpty() && amount.isNotEmpty() && date.isNotEmpty()) {
+                if (name.isNotEmpty() && category.isNotEmpty() && date.isNotEmpty()) {
                     onAddExpense(Expense(name, category, amount.toDouble(), date))
                 }
             }) {
@@ -121,6 +119,20 @@ fun AddExpenseDialog(onAddExpense: (Expense) -> Unit, onDismiss: () -> Unit) {
             }
         }
     )
+}
+
+// Amount Slider Component
+@Composable
+fun AmountSlider(amount: Float, onAmountChange: (Float) -> Unit) {
+    Column {
+        Text("Amount: $${amount.toInt()}", modifier = Modifier.padding(8.dp))
+        Slider(
+            value = amount,
+            onValueChange = onAmountChange,
+            valueRange = 0f..1000f,
+            steps = 9 // Increments of 100
+        )
+    }
 }
 
 @Composable
