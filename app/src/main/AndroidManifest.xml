@@ -38,7 +38,7 @@
         <!-- AddEditCrewScreenActivity -->
         <activity
             android:name=".CrewManagement"
-            android:label="Add/Edit Crew"
+            android:label="Crew Management"
             android:theme="@style/Theme.WorkNest" />
     </application>
 

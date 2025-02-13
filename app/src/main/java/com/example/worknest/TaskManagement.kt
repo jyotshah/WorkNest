@@ -54,7 +54,7 @@ fun TaskManagementScreen() {
             .padding(16.dp)
     ) {
         Text(
-            text = "Task Management",
+            text = "Tasks",
             style = MaterialTheme.typography.headlineLarge,
             modifier = Modifier.padding(bottom = 16.dp)
         )

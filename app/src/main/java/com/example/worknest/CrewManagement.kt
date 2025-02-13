@@ -1,23 +1,24 @@
 package com.example.worknest
 
 import android.os.Bundle
-import android.content.Intent
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
-data class CrewMember(val id: Int, val name: String, val role: String, val availability: String)
+data class CrewMember(val id: Int, val name: String, var role: String, val availability: String)
 
 class CrewManagement : ComponentActivity() {
-    private val crewList = mutableStateListOf<CrewMember>(
+    private val crewList = mutableStateListOf<CrewMember>( // Initial list of crew members
         CrewMember(1, "Alice", "Pilot", "Available"),
         CrewMember(2, "Bob", "Engineer", "Unavailable")
     )
@@ -27,189 +28,256 @@ class CrewManagement : ComponentActivity() {
         setContent {
             CrewListScreen(
                 crewList = crewList,
-                onAddCrewClick = {
-                    val intent = Intent(this, AddEditCrewActivity::class.java)
-                    startActivityForResult(intent, ADD_CREW_REQUEST)
-                },
-                onEditCrewClick = { crewMember ->
-                    val intent = Intent(this, AddEditCrewActivity::class.java).apply {
-                        putExtra("crewId", crewMember.id)
-                        putExtra("crewName", crewMember.name)
-                        putExtra("crewRole", crewMember.role)
-                        putExtra("crewAvailability", crewMember.availability)
-                    }
-                    startActivityForResult(intent, EDIT_CREW_REQUEST)
-                },
                 onDeleteCrewClick = { crewMember ->
                     crewList.remove(crewMember)
                     Toast.makeText(this, "${crewMember.name} deleted", Toast.LENGTH_SHORT).show()
+                },
+                onAddCrewClick = { name, role, availability ->
+                    val newId = crewList.size + 1
+                    crewList.add(CrewMember(newId, name, role, availability))
+                    Toast.makeText(this, "$name added", Toast.LENGTH_SHORT).show()
+                },
+                onEditCrewClick = { id, newName, newRole, newAvailability ->
+                    val index = crewList.indexOfFirst { it.id == id }
+                    if (index != -1) {
+                        crewList[index] = CrewMember(id, newName, newRole, newAvailability)
+                        Toast.makeText(this, "$newName updated", Toast.LENGTH_SHORT).show()
+                    }
                 }
             )
         }
     }
-
-
-override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-    super.onActivityResult(requestCode, resultCode, data)
-    if (resultCode == RESULT_OK) {
-        val name = data?.getStringExtra("crewName") ?: ""
-        val role = data?.getStringExtra("crewRole") ?: ""
-        val availability = data?.getStringExtra("crewAvailability") ?: ""
-        val crewId = data?.getIntExtra("crewId", -1) ?: -1
-
-        if (requestCode == ADD_CREW_REQUEST) {
-            // Changed: Handle adding new crew member
-            val newCrewMember = CrewMember(
-                id = crewList.size + 1,
-                name = name,
-                role = role,
-                availability = availability
-            )
-            crewList.add(newCrewMember)
-            Toast.makeText(this, "Crew Member Added", Toast.LENGTH_SHORT).show()
-        } else if (requestCode == EDIT_CREW_REQUEST && crewId != -1) {
-
-            val crewMemberIndex = crewList.indexOfFirst { it.id == crewId }
-            if (crewMemberIndex != -1) {
-                val updatedCrew = crewList[crewMemberIndex].copy(name = name, role = role, availability = availability)
-                crewList[crewMemberIndex] = updatedCrew // Changed: Update crew member in the list
-                Toast.makeText(this, "Crew Member Updated", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-}
-companion object {
-    const val ADD_CREW_REQUEST = 1
-    const val EDIT_CREW_REQUEST = 2
-}
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CrewListScreen(
     crewList: List<CrewMember>,
-    onAddCrewClick: () -> Unit,
-    onEditCrewClick: (CrewMember) -> Unit,
-    onDeleteCrewClick: (CrewMember) -> Unit
+    onDeleteCrewClick: (CrewMember) -> Unit,
+    onAddCrewClick: (String, String, String) -> Unit,
+    onEditCrewClick: (Int, String, String, String) -> Unit
 ) {
+    var showDialog by remember { mutableStateOf(false) }
+    var crewMemberToEdit by remember { mutableStateOf<CrewMember?>(null) }
+    var name by remember { mutableStateOf("") }
+    var role by remember { mutableStateOf("") }
+    var availability by remember { mutableStateOf("") }
+
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Crew Management") }) },
-        floatingActionButton = {
-            FloatingActionButton(onClick = onAddCrewClick) {
-                Text("+")
-            }
-        }
-    ) { padding ->
-        LazyColumn(
-            contentPadding = padding,
-            modifier = Modifier.padding(16.dp)
-        ) {
-            items(crewList) { crewMember ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                        .clickable { onEditCrewClick(crewMember) }
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Name: ${crewMember.name}", style = MaterialTheme.typography.titleMedium)
-                        Text("Role: ${crewMember.role}", style = MaterialTheme.typography.bodyLarge)
-                        Text("Availability: ${crewMember.availability}", style = MaterialTheme.typography.bodySmall)
-
-                        Row(
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-                        ) {
-                            TextButton(onClick = { onEditCrewClick(crewMember) }) {
-                                Text("Edit")
-                            }
-                            TextButton(onClick = { onDeleteCrewClick(crewMember) }) {
-                                Text("Delete")
-                            }
-                        }
+        topBar = {
+            TopAppBar(
+                title = { Text("Crew Management") },
+                actions = {
+                    IconButton(onClick = { showDialog = true }) {
+                        Icon(Icons.Default.Add, contentDescription = "Add Crew Member")
                     }
-                }
-            }
-        }
-    }
-}
-
-class AddEditCrewActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        val crewId = intent.getIntExtra("crewId", -1)
-        val crewName = intent.getStringExtra("crewName") ?: ""
-        val crewRole = intent.getStringExtra("crewRole") ?: ""
-        val crewAvailability = intent.getStringExtra("crewAvailability") ?: ""
-
-        setContent {
-            AddEditCrewFormScreen(
-                crewId = crewId,
-                crewName = crewName,
-                crewRole = crewRole,
-                crewAvailability = crewAvailability,
-                onSaveCrew = { name, role, availability ->
-                    val intent = Intent().apply {
-                        putExtra("crewName", name)
-                        putExtra("crewRole", role)
-                        putExtra("crewAvailability", availability)
-                        if (crewId != -1) {
-                            putExtra("crewId", crewId)
-                        }
-                    }
-                    setResult(RESULT_OK, intent)
-                    Toast.makeText(this, "Crew Member Saved", Toast.LENGTH_SHORT).show()
-                    finish()
                 }
             )
+        }
+    ) { padding ->
+        Column(modifier = Modifier.padding(padding)) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp)
+            ) {
+                items(crewList) { crewMember ->
+                    CrewMemberCard(
+                        crewMember = crewMember,
+                        onDeleteCrewClick = onDeleteCrewClick,
+                        onEditCrewClick = { crewMemberToEdit = it }
+                    )
+                }
+            }
+
+            // Dialog for adding a new crew member
+            if (showDialog) {
+                AddCrewDialog(
+                    onDismiss = { showDialog = false },
+                    onAddCrew = { name, role, availability ->
+                        onAddCrewClick(name, role, availability)
+                        showDialog = false
+                    },
+                    name = name,
+                    onNameChange = { name = it },
+                    role = role,
+                    onRoleChange = { role = it },
+                    availability = availability,
+                    onAvailabilityChange = { availability = it }
+                )
+            }
+
+            // Dialog for editing an existing crew member
+            crewMemberToEdit?.let { crew ->
+                EditCrewDialog(
+                    crewMember = crew,
+                    onDismiss = { crewMemberToEdit = null },
+                    onEditCrew = { updatedName, updatedRole, updatedAvailability ->
+                        onEditCrewClick(crew.id, updatedName, updatedRole, updatedAvailability)
+                        crewMemberToEdit = null
+                    }
+                )
+            }
         }
     }
 }
 
 @Composable
-fun AddEditCrewFormScreen(
-    crewId: Int,
-    crewName: String,
-    crewRole: String,
-    crewAvailability: String,
-    onSaveCrew: (String, String, String) -> Unit
+fun CrewMemberCard(
+    crewMember: CrewMember,
+    onDeleteCrewClick: (CrewMember) -> Unit,
+    onEditCrewClick: (CrewMember) -> Unit
 ) {
-    var name by remember { mutableStateOf(crewName) }
-    var role by remember { mutableStateOf(crewRole) }
-    var availability by remember { mutableStateOf(crewAvailability) }
+    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("Name: ${crewMember.name}", style = MaterialTheme.typography.titleMedium)
+            Text("Role: ${crewMember.role}", style = MaterialTheme.typography.bodyLarge)
+            Text("Availability: ${crewMember.availability}", style = MaterialTheme.typography.bodySmall)
 
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text(
-            if (crewId == -1) "Add New Crew Member" else "Edit Crew Member",
-            style = MaterialTheme.typography.titleLarge
-        )
-
-        OutlinedTextField(
-            value = name,
-            onValueChange = { name = it },
-            label = { Text("Name") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = role,
-            onValueChange = { role = it },
-            label = { Text("Role") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = availability,
-            onValueChange = { availability = it },
-            label = { Text("Availability") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(onClick = { onSaveCrew(name, role, availability) }) {
-            Text("Save Crew Member")
+            Row(
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
+            ) {
+                TextButton(onClick = { onEditCrewClick(crewMember) }) {
+                    Text("Edit")
+                }
+                TextButton(onClick = { onDeleteCrewClick(crewMember) }) {
+                    Text("Delete")
+                }
+            }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddCrewDialog(
+    onDismiss: () -> Unit,
+    onAddCrew: (String, String, String) -> Unit,
+    name: String,
+    onNameChange: (String) -> Unit,
+    role: String,
+    onRoleChange: (String) -> Unit,
+    availability: String,
+    onAvailabilityChange: (String) -> Unit
+) {
+    val availableRoles = listOf("Waiter", "Chef", "Manager", "Cashier", "Dishwasher")
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Add New Crew Member") },
+        text = {
+            Column {
+                TextField(
+                    value = name,
+                    onValueChange = onNameChange,
+                    label = { Text("Name") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("Role:")
+                availableRoles.forEach { availableRole ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = role == availableRole,
+                            onClick = { onRoleChange(availableRole) }
+                        )
+                        Text(availableRole, modifier = Modifier.padding(start = 8.dp))
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                TextField(
+                    value = availability,
+                    onValueChange = onAvailabilityChange,
+                    label = { Text("Availability") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (name.isNotBlank() && role.isNotBlank() && availability.isNotBlank()) {
+                        onAddCrew(name, role, availability)
+                    }
+                }
+            ) {
+                Text("Add")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EditCrewDialog(
+    crewMember: CrewMember,
+    onDismiss: () -> Unit,
+    onEditCrew: (String, String, String) -> Unit
+) {
+    val availableRoles = listOf("Waiter", "Chef", "Manager", "Cashier", "Dishwasher")
+    var name by remember { mutableStateOf(crewMember.name) }
+    var role by remember { mutableStateOf(crewMember.role) }
+    var availability by remember { mutableStateOf(crewMember.availability) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Edit Crew Member") },
+        text = {
+            Column {
+                TextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Name") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("Role:")
+                availableRoles.forEach { availableRole ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = role == availableRole,
+                            onClick = { role = availableRole }
+                        )
+                        Text(availableRole, modifier = Modifier.padding(start = 8.dp))
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                TextField(
+                    value = availability,
+                    onValueChange = { availability = it },
+                    label = { Text("Availability") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (name.isNotBlank() && role.isNotBlank() && availability.isNotBlank()) {
+                        onEditCrew(name, role, availability)
+                    }
+                }
+            ) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }
