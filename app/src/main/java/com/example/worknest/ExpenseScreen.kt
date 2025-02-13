@@ -22,6 +22,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -186,12 +187,12 @@ fun ExpenseTable(expenses: List<Expense>) {
                 .fillMaxWidth()
                 .padding(8.dp)
                 .background(Color(0xFF00796B)),
-            horizontalArrangement = Arrangement.SpaceBetween
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            TableHeader("📝 Expense", Color.White)
-            TableHeader("📂 Category", Color.White)
-            TableHeader("💰 Amount", Color.White)
-            TableHeader("📅 Date", Color.White)
+            TableHeader("📝 Expense", Modifier.weight(2f))
+            TableHeader("📂 Category", Modifier.weight(1.5f))
+            TableHeader("\uD83D\uDCB5 Amount", Modifier.weight(1f))
+            TableHeader("\uD83D\uDCC6 Date", Modifier.weight(1.2f))
         }
 
         Divider(color = Color.Gray, thickness = 2.dp)
@@ -208,14 +209,13 @@ fun ExpenseTable(expenses: List<Expense>) {
 // Function name: TableHeader
 // Function description: Displays a header in the expense table.
 @Composable
-fun TableHeader(text: String, color:Color) {
+fun TableHeader(text: String, modifier: Modifier) {
     Text(
         text = text,
         fontSize = 16.sp,
         fontWeight = FontWeight.Bold,
-        color = color,
-        modifier = Modifier
-            .padding(8.dp)
+        color = Color.White,
+        modifier = Modifier.padding(8.dp)
     )
 }
 
@@ -223,24 +223,16 @@ fun TableHeader(text: String, color:Color) {
 // Function description: Displays a row representing a single expense in the expense table.
 @Composable
 fun ExpenseRow(expense: Expense) {
-    Card(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(6.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFE0F2F1)),
-        elevation = CardDefaults.cardElevation(4.dp)
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(text = expense.name, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
-            Text(text = expense.category, modifier = Modifier.weight(1f), color = Color(0xFF004D40))
-            Text(text = "$${expense.amount}", modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold, color = Color(0xFF00796B))
-            Text(text = expense.date, modifier = Modifier.weight(1f), color = Color.Gray)
-        }
+        Text(text = expense.name, modifier = Modifier.weight(2f), fontWeight = FontWeight.Bold)
+        Text(text = expense.category, modifier = Modifier.weight(1.5f), color = Color(0xFF004D40))
+        Text(text = "$${expense.amount}", modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold, color = Color(0xFF00796B))
+        Text(text = expense.date, modifier = Modifier.weight(1.2f), color = Color.Gray)
     }
 }
 
