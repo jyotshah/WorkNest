@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,7 +14,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 data class CrewMember(val id: Int, val name: String, var role: String, val availability: String)
 
@@ -66,7 +71,11 @@ fun CrewListScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Crew Management") },
+                title = { Text("👥 Crew Management", fontWeight = FontWeight.Bold, fontSize = 20.sp) },
+                colors = TopAppBarDefaults.mediumTopAppBarColors(
+                    containerColor = Color(0xFF00796B),
+                    titleContentColor = Color.White
+                ),
                 actions = {
                     IconButton(onClick = { showDialog = true }) {
                         Icon(Icons.Default.Add, contentDescription = "Add Crew Member")
@@ -75,10 +84,19 @@ fun CrewListScreen(
             )
         }
     ) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(Color(0xFFE0F2F1), Color(0xFFB2DFDB))
+                    )
+                )
+                .padding(padding)
+                .padding(16.dp)
+        ) {
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp)
+                modifier = Modifier.fillMaxSize()
             ) {
                 items(crewList) { crewMember ->
                     CrewMemberCard(
@@ -127,28 +145,30 @@ fun CrewMemberCard(
     onDeleteCrewClick: (CrewMember) -> Unit,
     onEditCrewClick: (CrewMember) -> Unit
 ) {
-    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFE0F2F1)),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text("Name: ${crewMember.name}", style = MaterialTheme.typography.titleMedium)
-            Text("Role: ${crewMember.role}", style = MaterialTheme.typography.bodyLarge)
-            Text("Availability: ${crewMember.availability}", style = MaterialTheme.typography.bodySmall)
-
+            Text("Name: ${crewMember.name}", fontWeight = FontWeight.Bold)
+            Text("Role: ${crewMember.role}")
+            Text("Availability: ${crewMember.availability}", color = Color(0xFF004D40))
             Row(
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp)
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                TextButton(onClick = { onEditCrewClick(crewMember) }) {
+                Button(onClick = { onEditCrewClick(crewMember) }) {
                     Text("Edit")
                 }
-                TextButton(onClick = { onDeleteCrewClick(crewMember) }) {
+                Button(onClick = { onDeleteCrewClick(crewMember) }, colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) {
                     Text("Delete")
                 }
             }
         }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

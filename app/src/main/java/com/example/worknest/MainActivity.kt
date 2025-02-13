@@ -7,11 +7,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Message
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -19,8 +16,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import android.content.Intent
+import androidx.compose.foundation.background
 import androidx.compose.material.icons.filled.Money
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 
 
 class MainActivity : ComponentActivity() {
@@ -39,7 +41,15 @@ fun WorkNestApp() {
 
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-        topBar = { TopAppBar(title = { Text("WorkNest") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("\uD83C\uDFE0 WorkNest Dashboard", fontWeight = FontWeight.Bold, fontSize = 20.sp) },
+                colors = TopAppBarDefaults.mediumTopAppBarColors(
+                    containerColor = Color(0xFF00796B),
+                    titleContentColor = Color.White
+                )
+            )
+        },
         bottomBar = { BottomNavigationBar() }
     ) { innerPadding ->
         HomePage(modifier = Modifier.padding(innerPadding))
@@ -83,24 +93,22 @@ fun HomePage(modifier: Modifier = Modifier) {
     val crewCount = 10
     val pendingTasks = 5
     val upcomingDeadlines = 3
-    val recentTasks = listOf("Task 1", "Task 2", "Task 3")
+    val recentTasks = listOf("Kitchen Prep", "Stock Management", "Catering Management")
 
     Column(
         modifier = modifier
             .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(Color(0xFFE0F2F1), Color(0xFFB2DFDB))
+                )
+            )
             .padding(16.dp)
     ) {
-        // App Title
         Text(
-            text = "WorkNest Dashboard",
-            style = MaterialTheme.typography.headlineLarge,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-
-        // Quick Stats Section
-        Text(
-            text = "Quick Stats",
+            text = "📊 Quick Stats",
             style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(vertical = 8.dp)
         )
         Row(
@@ -109,24 +117,19 @@ fun HomePage(modifier: Modifier = Modifier) {
                 .padding(vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            StatCard(label = "Crew Members", value = crewCount)
-            StatCard(label = "Pending Tasks", value = pendingTasks)
-            StatCard(label = "Upcoming Deadlines", value = upcomingDeadlines)
+            StatCard(label = "\uD83D\uDC68\u200D\uD83D\uDD27 Crew Members", value = crewCount)
+            StatCard(label = "⌛ Pending Tasks", value = pendingTasks)
+            StatCard(label = "📅 Deadlines", value = upcomingDeadlines)
         }
-
-        HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
-
-        // Recent Tasks Section
+        Divider(color = Color.Gray, thickness = 2.dp, modifier = Modifier.padding(vertical = 16.dp))
         Text(
-            text = "Recent Tasks",
+            text = "\uD83D\uDCDD Recent Tasks",
             style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(vertical = 8.dp)
         )
         LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .padding(bottom = 16.dp)
+            modifier = Modifier.fillMaxWidth().weight(1f).padding(bottom = 16.dp)
         ) {
             items(recentTasks) { task ->
                 TaskItem(task = task)
@@ -139,17 +142,17 @@ fun HomePage(modifier: Modifier = Modifier) {
 @Composable
 fun StatCard(label: String, value: Int, modifier: Modifier = Modifier) {
     Card(
-        modifier = modifier
-            .padding(4.dp),
-        elevation = CardDefaults.outlinedCardElevation(4.dp)
+        modifier = modifier.padding(4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF00796B)),
+        elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column(
             modifier = Modifier.padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(label, style = MaterialTheme.typography.bodySmall)
+            Text(label, style = MaterialTheme.typography.bodySmall, color = Color.White)
             Spacer(modifier = Modifier.height(4.dp))
-            Text(value.toString(), style = MaterialTheme.typography.titleLarge)
+            Text(value.toString(), style = MaterialTheme.typography.titleLarge, color = Color.White)
         }
     }
 }
@@ -157,27 +160,20 @@ fun StatCard(label: String, value: Int, modifier: Modifier = Modifier) {
 @Composable
 fun TaskItem(task: String, modifier: Modifier = Modifier) {
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
+        modifier = modifier.fillMaxWidth().padding(vertical = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFE0F2F1)),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Row(
-            modifier = Modifier
-                .padding(8.dp)
-                .fillMaxWidth(),
+            modifier = Modifier.padding(8.dp).fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = task,
                 style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f)
-            )
-            Icon(
-                Icons.Filled.List,
-                contentDescription = "Task Icon",
-                modifier = Modifier.size(24.dp)
             )
         }
     }
