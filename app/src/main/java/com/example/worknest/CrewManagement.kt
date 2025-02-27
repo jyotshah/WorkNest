@@ -26,33 +26,40 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.worknest.database.DatabaseManager
+import com.example.worknest.models.CrewMember
 
 // Data class representing  crew member
 data class CrewMember(val id: Int, val name: String, var role: String, val availability: String)
 
 class CrewManagement : ComponentActivity() {
-    private val crewList = mutableStateListOf<CrewMember>(
-        CrewMember(1, "Alice", "Manager", "Available"),
-        CrewMember(2, "Bob", "Chef", "Unavailable")
-    )
+    private lateinit var dbManager: DatabaseManager
+    private val crewList = mutableStateListOf<CrewMember>()
 
     // Function: onCreate
     // Description: Initializes the application and the UI content
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        dbManager = DatabaseManager(this)
+        val crewList = dbManager.getAllCrew().toMutableStateList()
+
         setContent {
             CrewListScreen(
                 crewList = crewList,
                 onDeleteCrewClick = { crewMember ->
+                    dbManager.deleteCrew(crewMember.id)
                     crewList.remove(crewMember)
                     Toast.makeText(this, "${crewMember.name} deleted", Toast.LENGTH_SHORT).show()
                 },
                 onAddCrewClick = { name, role, availability ->
-                    val newId = crewList.size + 1
-                    crewList.add(CrewMember(newId, name, role, availability))
+                    val newCrew = CrewMember(0, name, role, availability)
+                    dbManager.insertCrew(name, role, availability)
+                    crewList.add(newCrew)
                     Toast.makeText(this, "$name added", Toast.LENGTH_SHORT).show()
                 },
                 onEditCrewClick = { id, newName, newRole, newAvailability ->
+                    val updatedCrew = CrewMember(id, newName, newRole, newAvailability)
+                    dbManager.insertCrew(newName, newRole, newAvailability)
                     val index = crewList.indexOfFirst { it.id == id }
                     if (index != -1) {
                         crewList[index] = CrewMember(id, newName, newRole, newAvailability)

@@ -21,47 +21,73 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.example.worknest.database.DatabaseManager // CHANGED
+import com.example.worknest.models.Task // CHANGED
 
-//Data class : Task
-//Description: Represents a task with name, description, priority, and completion status.
 class TaskManagement : ComponentActivity() {
+    private lateinit var dbManager: DatabaseManager // CHANGED
+    private val taskList = mutableStateListOf<Task>() // CHANGED
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        dbManager = DatabaseManager(this) // CHANGED
+        taskList.addAll(dbManager.getAllTasks()) // CHANGED
+
         setContent {
-            TaskManagementScreen()
+            TaskManagementScreen(
+                tasks = taskList,
+                onDeleteTaskClick = { task ->
+                    dbManager.deleteTask(task.id) // CHANGED
+                    taskList.remove(task) // CHANGED
+                    Toast.makeText(this, "${task.name} deleted", Toast.LENGTH_SHORT).show()
+                },
+                onAddTaskClick = { name, description, priority ->
+                    val newTask = Task(0, name, description, priority, false) // CHANGED
+                    dbManager.insertTask(name, description, priority, false) // CHANGED
+                    taskList.add(newTask) // CHANGED
+                    Toast.makeText(this, "$name added", Toast.LENGTH_SHORT).show()
+                },
+                onEditTaskClick = { id, newName, newDescription, newPriority ->
+                    val updatedTask = Task(id, newName, newDescription, newPriority, false)
+                    dbManager.updateTask(updatedTask)
+                    val index = taskList.indexOfFirst { it.id == id }
+                    if (index != -1) {
+                        taskList[index] = updatedTask.copy()
+                        Toast.makeText(this, "$newName updated", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                onTaskCompleted = { task, completed ->
+                    val updatedTask = task.copy(completed = completed)
+                    dbManager.updateTask(updatedTask)
+                    val index = taskList.indexOfFirst { it.id == task.id }
+                    if (index != -1) {
+                        taskList[index] = updatedTask.copy()
+                    }
+                }
+            )
         }
     }
 }
 
-//Function : TaskManagementScreen
-//Description: Displays a list of tasks with options to edit, delete, and mark as completed.
+// Function: TaskManagementScreen
+// Description: Displays a list of tasks with options to edit, delete, and mark as completed.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TaskManagementScreen() {
-    val context = LocalContext.current
-    var taskName by remember { mutableStateOf("") }
-    var taskDescription by remember { mutableStateOf("") }
-    var selectedPriority by remember { mutableStateOf("Medium") }
-    var tasks = remember { mutableStateListOf<Task>() }
-
-    val saveTask: () -> Unit = {
-        if (taskName.isNotBlank() && taskDescription.isNotBlank()) {
-            tasks.add(Task(taskName, taskDescription, selectedPriority, false))
-            Toast.makeText(context, "Task saved successfully", Toast.LENGTH_SHORT).show()
-            taskName = ""
-            taskDescription = ""
-            selectedPriority = "Medium"
-        } else {
-            Toast.makeText(context, "Please enter task details", Toast.LENGTH_SHORT).show()
-        }
-    }
+fun TaskManagementScreen(
+    tasks: List<Task>,
+    onDeleteTaskClick: (Task) -> Unit,
+    onAddTaskClick: (String, String, String) -> Unit,
+    onEditTaskClick: (Int, String, String, String) -> Unit,
+    onTaskCompleted: (Task, Boolean) -> Unit
+) {
+    var showDialog by remember { mutableStateOf(false) }
+    var taskToEdit by remember { mutableStateOf<Task?>(null) }
 
     Scaffold(
         topBar = {
@@ -73,8 +99,7 @@ fun TaskManagementScreen() {
                 )
             )
         }
-    )
-    {paddingValues->
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -86,128 +111,33 @@ fun TaskManagementScreen() {
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
-        Text(
-            text = "Tasks",
-            style = MaterialTheme.typography.headlineLarge,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-            OutlinedTextField(
-                value = taskName,
-                onValueChange = { taskName = it },
-                label = { Text("Enter task name") },
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
-        )
-
-            OutlinedTextField(
-                value = taskDescription,
-                onValueChange = { taskDescription = it },
-                label = { Text("Enter task description") },
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
-            )
-
-        PriorityDropdown(selectedPriority) { priority ->
-            selectedPriority = priority
-        }
-
-            Button(
-                onClick = saveTask,
-                modifier = Modifier.padding(vertical = 8.dp)
-            ) {
-                Text(text = "Save Task")
+            Button(onClick = { showDialog = true }, modifier = Modifier.padding(vertical = 8.dp)) {
+                Text(text = "Add Task")
             }
-
-            //Spacer(modifier = Modifier.height(16.dp))
 
             LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f).padding(top = 16.dp)) {
                 items(tasks) { task ->
                     TaskCard(
                         task,
-                        onCheckedChange = { checked ->
-                            tasks[tasks.indexOf(task)] = task.copy(completed = checked)
-                        },
-                        onEdit = {
-                            taskName = task.name
-                            taskDescription = task.description
-                            selectedPriority = task.priority
-                            tasks.remove(task)
-                            Toast.makeText(context, "Task moved to edit", Toast.LENGTH_SHORT).show()
-                        },
-                        onDelete = {
-                            tasks.remove(task)
-                            Toast.makeText(context, "Task deleted", Toast.LENGTH_SHORT).show()
-                        }
+                        onCheckedChange = { completed -> onTaskCompleted(task, completed) },
+                        onEdit = { taskToEdit = task; showDialog = true },
+                        onDelete = { onDeleteTaskClick(task) }
                     )
                 }
             }
-        }
-    }
-}
-      /*  tasks.forEachIndexed { index, task ->
-            TaskCard(
-                task,
-                onCheckedChange = { checked ->
-                    tasks[index] = task.copy(completed = checked)
-                },
-                onEdit = {
-                    taskName = task.name
-                    taskDescription = task.description
-                    selectedPriority = task.priority
-                    tasks.removeAt(index)
-                    Toast.makeText(context, "Task moved to edit", Toast.LENGTH_SHORT).show()
-                },
-                onDelete = {
-                    tasks.removeAt(index)
-                    Toast.makeText(context, "Task deleted", Toast.LENGTH_SHORT).show()
-                }
-            )
-        }
-    }
-}*/
 
-data class Task(val name: String, val description: String, val priority: String, val completed: Boolean)
-
-// Function: PriorityDropdown
-// Description: Dropdown menu for selecting task priority.(Spinner)
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun PriorityDropdown(selectedPriority: String, onPrioritySelected: (String) -> Unit) {
-    val priorities = listOf("Low", "Medium", "High")
-    var expanded by remember { mutableStateOf(false) }
-
-    // This will represent the selected item in the spinner
-    val label = "Priority: $selectedPriority"
-
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = !expanded },
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        OutlinedTextField(
-            value = label,
-            onValueChange = {},
-            readOnly = true,  // Makes it read-only to mimic a spinner
-            label = { Text("Select Priority") },
-            trailingIcon = {
-                Icon(
-                    imageVector = Icons.Default.ArrowDropDown,
-                    contentDescription = null
-                )
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .menuAnchor()
-        )
-
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            priorities.forEach { priority ->
-                DropdownMenuItem(
-                    text = { Text(priority) },
-                    onClick = {
-                        onPrioritySelected(priority)
-                        expanded = false
+            if (showDialog) {
+                AddOrEditTaskDialog(
+                    task = taskToEdit,
+                    onDismiss = { showDialog = false; taskToEdit = null },
+                    onConfirm = { name, description, priority ->
+                        if (taskToEdit == null) {
+                            onAddTaskClick(name, description, priority)
+                        } else {
+                            onEditTaskClick(taskToEdit!!.id, name, description, priority)
+                        }
+                        showDialog = false
+                        taskToEdit = null
                     }
                 )
             }
@@ -246,9 +176,78 @@ fun TaskCard(
     Divider(modifier = Modifier.padding(vertical = 8.dp))
 }
 
-//Preview : TaskManagementScreen
-@Preview(showBackground = true)
+
+// Function: AddOrEditTaskDialog
+// Description: Dialog box to add or edit a task.
 @Composable
-fun DefaultPreview() {
-    TaskManagementScreen()
+fun AddOrEditTaskDialog(
+    task: Task?,
+    onDismiss: () -> Unit,
+    onConfirm: (String, String, String) -> Unit
+) {
+    var name by remember { mutableStateOf(task?.name ?: "") }
+    var description by remember { mutableStateOf(task?.description ?: "") }
+    var priority by remember { mutableStateOf(task?.priority ?: "Medium") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (task == null) "Add Task" else "Edit Task") },
+        text = {
+            Column {
+                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Task Name") })
+                OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Description") })
+                PriorityDropdown(priority) { priority = it }
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onConfirm(name, description, priority) }) { Text("Save") }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) { Text("Cancel") }
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PriorityDropdown(selectedPriority: String, onPrioritySelected: (String) -> Unit) {
+    val priorities = listOf("Low", "Medium", "High")
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded },
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        OutlinedTextField(
+            value = selectedPriority,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Select Priority") },
+            trailingIcon = {
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = null
+                )
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor()
+        )
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            priorities.forEach { priority ->
+                DropdownMenuItem(
+                    text = { Text(priority) },
+                    onClick = {
+                        onPrioritySelected(priority)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
 }

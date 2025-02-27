@@ -30,12 +30,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.example.worknest.database.DatabaseManager
 
 // Function Name: onCreate
 // Function Description: Starts the activity and sets the content view to the WorkNestApp composable.
 class MainActivity : ComponentActivity() {
+    private lateinit var dbManager: DatabaseManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        dbManager = DatabaseManager(this)
         setContent {
             // Set the WorkNestApp composable as the content view
             WorkNestApp()
