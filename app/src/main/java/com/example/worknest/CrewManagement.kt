@@ -36,38 +36,50 @@ class CrewManagement : ComponentActivity() {
     private lateinit var dbManager: DatabaseManager
     private val crewList = mutableStateListOf<CrewMember>()
 
+
     // Function: onCreate
     // Description: Initializes the application and the UI content
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         dbManager = DatabaseManager(this)
-        val crewList = dbManager.getAllCrew().toMutableStateList()
+
+        crewList.addAll(dbManager.getAllCrew())
 
         setContent {
             CrewListScreen(
                 crewList = crewList,
-                onDeleteCrewClick = { crewMember ->
-                    dbManager.deleteCrew(crewMember.id)
-                    crewList.remove(crewMember)
-                    Toast.makeText(this, "${crewMember.name} deleted", Toast.LENGTH_SHORT).show()
-                },
-                onAddCrewClick = { name, role, availability ->
+
+                onAddCrewClick = { name, role, availability, onCrewCountChange ->
                     val newCrew = CrewMember(0, name, role, availability)
                     dbManager.insertCrew(name, role, availability)
                     crewList.add(newCrew)
+                    onCrewCountChange()  // Update the crew count after adding
                     Toast.makeText(this, "$name added", Toast.LENGTH_SHORT).show()
                 },
+
+                onDeleteCrewClick = { crewMember, onCrewCountChange ->
+                    dbManager.deleteCrew(crewMember.id)
+                    crewList.remove(crewMember)
+                    onCrewCountChange()  // Update the crew count after deleting
+                    Toast.makeText(this, "${crewMember.name} deleted", Toast.LENGTH_SHORT).show()
+                },
+
                 onEditCrewClick = { id, newName, newRole, newAvailability ->
+                    // Update the database
+                    dbManager.updateCrew(id, newName, newRole, newAvailability)
+
+                    // Find the crew member in the local list and update it
                     val updatedCrew = CrewMember(id, newName, newRole, newAvailability)
-                    dbManager.insertCrew(newName, newRole, newAvailability)
                     val index = crewList.indexOfFirst { it.id == id }
                     if (index != -1) {
-                        crewList[index] = CrewMember(id, newName, newRole, newAvailability)
+                        crewList[index] = updatedCrew
                         Toast.makeText(this, "$newName updated", Toast.LENGTH_SHORT).show()
                     }
                 }
             )
         }
+        crewList.clear()
+        crewList.addAll(dbManager.getAllCrew())
     }
 }
 
@@ -76,9 +88,9 @@ class CrewManagement : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CrewListScreen(
-    crewList: List<CrewMember>,
-    onDeleteCrewClick: (CrewMember) -> Unit,
-    onAddCrewClick: (String, String, String) -> Unit,
+    crewList: MutableList<CrewMember>,
+    onDeleteCrewClick: (CrewMember, () -> Unit) -> Unit,
+    onAddCrewClick: (String, String, String, () -> Unit) -> Unit,
     onEditCrewClick: (Int, String, String, String) -> Unit
 ) {
     var showDialog by remember { mutableStateOf(false) }
@@ -120,7 +132,7 @@ fun CrewListScreen(
                 items(crewList) { crewMember ->
                     CrewMemberCard(
                         crewMember = crewMember,
-                        onDeleteCrewClick = onDeleteCrewClick,
+                        onDeleteCrewClick = { onDeleteCrewClick(crewMember, {}) },
                         onEditCrewClick = { crewMemberToEdit = it }
                     )
                 }
@@ -130,7 +142,7 @@ fun CrewListScreen(
                 AddCrewDialog(
                     onDismiss = { showDialog = false },
                     onAddCrew = { name, role, availability ->
-                        onAddCrewClick(name, role, availability)
+                        onAddCrewClick(name, role, availability, {})
                         showDialog = false
                     },
                     name = name,

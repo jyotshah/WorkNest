@@ -27,30 +27,30 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import com.example.worknest.database.DatabaseManager // CHANGED
-import com.example.worknest.models.Task // CHANGED
+import com.example.worknest.database.DatabaseManager
+import com.example.worknest.models.Task
 
 class TaskManagement : ComponentActivity() {
-    private lateinit var dbManager: DatabaseManager // CHANGED
-    private val taskList = mutableStateListOf<Task>() // CHANGED
+    private lateinit var dbManager: DatabaseManager
+    private val taskList = mutableStateListOf<Task>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        dbManager = DatabaseManager(this) // CHANGED
-        taskList.addAll(dbManager.getAllTasks()) // CHANGED
+        dbManager = DatabaseManager(this)
+        taskList.addAll(dbManager.getAllTasks())
 
         setContent {
             TaskManagementScreen(
                 tasks = taskList,
                 onDeleteTaskClick = { task ->
-                    dbManager.deleteTask(task.id) // CHANGED
-                    taskList.remove(task) // CHANGED
+                    dbManager.deleteTask(task.id)
+                    taskList.remove(task)
                     Toast.makeText(this, "${task.name} deleted", Toast.LENGTH_SHORT).show()
                 },
                 onAddTaskClick = { name, description, priority ->
-                    val newTask = Task(0, name, description, priority, false) // CHANGED
-                    dbManager.insertTask(name, description, priority, false) // CHANGED
-                    taskList.add(newTask) // CHANGED
+                    val newTask = Task(0, name, description, priority, false)
+                    dbManager.insertTask(name, description, priority, false)
+                    taskList.add(newTask)
                     Toast.makeText(this, "$name added", Toast.LENGTH_SHORT).show()
                 },
                 onEditTaskClick = { id, newName, newDescription, newPriority ->
@@ -160,7 +160,7 @@ fun TaskCard(
     ) {
         Checkbox(
             checked = task.completed,
-            onCheckedChange = onCheckedChange
+            onCheckedChange = { completed -> onCheckedChange(completed) }
         )
         Spacer(modifier = Modifier.width(8.dp))
         Column(modifier = Modifier.weight(1f)) {

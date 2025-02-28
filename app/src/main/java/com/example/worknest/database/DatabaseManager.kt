@@ -22,6 +22,16 @@ class DatabaseManager(context: Context) {
         db.insert("crew", null, values)
     }
 
+    fun updateCrew(id: Int, name: String, role: String, availability: String) {
+        val values = ContentValues().apply {
+            put("name", name)
+            put("role", role)
+            put("availability", availability)
+        }
+        // Use the existing `db` instance to update
+        db.update("crew", values, "id = ?", arrayOf(id.toString()))
+    }
+
     fun getAllCrew(): List<CrewMember> {
         val crewList = mutableListOf<CrewMember>()
         val cursor: Cursor = db.rawQuery("SELECT * FROM crew", null)
