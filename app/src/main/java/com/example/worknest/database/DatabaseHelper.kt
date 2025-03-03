@@ -1,3 +1,10 @@
+/*
+Students Name : Jyot Shah & Ashwini Gunaga
+Students Number : 8871717 & 8888180
+Assignment : A02
+Date : 3/2/2025
+File : DatabaseHelper.kt
+*/
 package com.example.worknest.database
 
 import android.content.Context
@@ -30,5 +37,6 @@ class DatabaseHelper(context: Context) :
             "CREATE TABLE tasks (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, description TEXT, priority TEXT, completed INTEGER)"
         private const val CREATE_TABLE_EXPENSES =
             "CREATE TABLE expenses (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, category TEXT, amount REAL, date TEXT)"
+
     }
 }

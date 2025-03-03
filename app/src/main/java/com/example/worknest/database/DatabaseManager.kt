@@ -1,3 +1,10 @@
+/*
+Students Name : Jyot Shah & Ashwini Gunaga
+Students Number : 8871717 & 8888180
+Assignment : A02
+Date : 3/2/2025
+File : DatabaseManager.kt
+*/
 package com.example.worknest.database
 
 import android.content.ContentValues
@@ -102,6 +109,7 @@ class DatabaseManager(context: Context) {
         db.insert("expenses", null, values)
     }
 
+
     fun getAllExpenses(): List<Expense> {
         val expenseList = mutableListOf<Expense>()
         val cursor: Cursor = db.rawQuery("SELECT * FROM expenses", null)
@@ -116,4 +124,5 @@ class DatabaseManager(context: Context) {
         cursor.close()
         return expenseList
     }
+
 }
