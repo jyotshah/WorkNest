@@ -109,7 +109,10 @@ fun CrewListScreen(
                 ),
                 actions = {
                     IconButton(onClick = { showDialog = true }) {
-                        Icon(Icons.Default.Add, contentDescription = "Add Crew Member")
+                        Icon(imageVector = Icons.Default.Add,
+                            contentDescription = "Add Crew Member",
+                            tint = Color.White,
+                            modifier = Modifier.size(32.dp))
                     }
                 }
             )
@@ -215,8 +218,8 @@ fun AddCrewDialog(
     availability: String,
     onAvailabilityChange: (String) -> Unit
 ) {
-    val availableRoles = listOf("" +
-            "Manager", "Chef", "Sous Chef","Pastry Chef", "Line Cook", "Bartender", "Server", "Dishwasher", "Cashier", "Dishwasher")
+    val availableRoles = listOf("Manager", "Chef", "Sous Chef", "Pastry Chef", "Line Cook", "Bartender", "Server", "Dishwasher", "Cashier")
+    val availableOptions = listOf("Available", "Unavailable") // Added Available/Unavailable options
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -244,12 +247,20 @@ fun AddCrewDialog(
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                TextField(
-                    value = availability,
-                    onValueChange = onAvailabilityChange,
-                    label = { Text("Availability") },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Text("Availability:")
+                availableOptions.forEach { option ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = availability == option,
+                            onClick = { onAvailabilityChange(option) }
+                        )
+                        Text(option, modifier = Modifier.padding(start = 8.dp))
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
             }
         },
         confirmButton = {
@@ -271,6 +282,7 @@ fun AddCrewDialog(
     )
 }
 
+
 // Function: EditCrewDialog
 // Description: Box for editing an existing crew member's details.
 @OptIn(ExperimentalMaterial3Api::class)
@@ -281,6 +293,7 @@ fun EditCrewDialog(
     onEditCrew: (String, String, String) -> Unit
 ) {
     val availableRoles = listOf("Waiter", "Chef", "Manager", "Cashier", "Dishwasher")
+    val availableOptions = listOf("Available", "Unavailable") // Added Available/Unavailable options
     var name by remember { mutableStateOf(crewMember.name) }
     var role by remember { mutableStateOf(crewMember.role) }
     var availability by remember { mutableStateOf(crewMember.availability) }
@@ -311,12 +324,20 @@ fun EditCrewDialog(
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                TextField(
-                    value = availability,
-                    onValueChange = { availability = it },
-                    label = { Text("Availability") },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Text("Availability:")
+                availableOptions.forEach { option ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = availability == option,
+                            onClick = { availability = option }
+                        )
+                        Text(option, modifier = Modifier.padding(start = 8.dp))
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
             }
         },
         confirmButton = {
@@ -337,3 +358,5 @@ fun EditCrewDialog(
         }
     )
 }
+
+
