@@ -11,13 +11,37 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 
-class DatabaseHelper(context: Context) :
-    SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
     override fun onCreate(db: SQLiteDatabase) {
-        db.execSQL(CREATE_TABLE_CREW)
-        db.execSQL(CREATE_TABLE_TASKS)
-        db.execSQL(CREATE_TABLE_EXPENSES)
+        // Create Crew table
+        db.execSQL(
+            "CREATE TABLE crew (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "name TEXT NOT NULL, " +
+                    "role TEXT NOT NULL, " +
+                    "availability TEXT NOT NULL)"
+        )
+
+        // Create Tasks table
+        db.execSQL(
+            "CREATE TABLE tasks (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "name TEXT NOT NULL, " +
+                    "description TEXT NOT NULL, " +
+                    "priority TEXT NOT NULL, " +
+                    "completed INTEGER NOT NULL)"
+        )
+
+        // Create Expenses table
+        db.execSQL(
+            "CREATE TABLE expenses (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "name TEXT NOT NULL, " +
+                    "category TEXT NOT NULL, " +
+                    "amount REAL NOT NULL, " +
+                    "date TEXT NOT NULL)"
+        )
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
@@ -30,13 +54,5 @@ class DatabaseHelper(context: Context) :
     companion object {
         private const val DATABASE_NAME = "worknest.db"
         private const val DATABASE_VERSION = 1
-
-        private const val CREATE_TABLE_CREW =
-            "CREATE TABLE crew (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, role TEXT, availability TEXT)"
-        private const val CREATE_TABLE_TASKS =
-            "CREATE TABLE tasks (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, description TEXT, priority TEXT, completed INTEGER)"
-        private const val CREATE_TABLE_EXPENSES =
-            "CREATE TABLE expenses (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, category TEXT, amount REAL, date TEXT)"
-
     }
 }

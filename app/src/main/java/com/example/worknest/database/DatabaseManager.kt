@@ -35,7 +35,6 @@ class DatabaseManager(context: Context) {
             put("role", role)
             put("availability", availability)
         }
-        // Use the existing `db` instance to update
         db.update("crew", values, "id = ?", arrayOf(id.toString()))
     }
 
@@ -97,7 +96,6 @@ class DatabaseManager(context: Context) {
         db.update("tasks", values, "id=?", arrayOf(task.id.toString()))
     }
 
-
     // Expense Operations
     fun insertExpense(name: String, category: String, amount: Double, date: String) {
         val values = ContentValues().apply {
@@ -108,7 +106,6 @@ class DatabaseManager(context: Context) {
         }
         db.insert("expenses", null, values)
     }
-
 
     fun getAllExpenses(): List<Expense> {
         val expenseList = mutableListOf<Expense>()
@@ -124,5 +121,4 @@ class DatabaseManager(context: Context) {
         cursor.close()
         return expenseList
     }
-
 }
