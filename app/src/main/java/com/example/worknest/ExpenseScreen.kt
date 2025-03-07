@@ -217,9 +217,15 @@
         ) {
             Text(text = expense.name, modifier = Modifier.weight(2f), fontWeight = FontWeight.Bold)
             Text(text = expense.category, modifier = Modifier.weight(1.5f), color = Color(0xFF004D40))
-            Text(text = "$${expense.amount}", modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold, color = Color(0xFF00796B))
+            Text(
+                text = "$${"%.2f".format(expense.amount)}", // Ensures 2 decimal places
+                modifier = Modifier.weight(1f),
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF00796B)
+            )
             Text(text = expense.date, modifier = Modifier.weight(1.2f), color = Color.Gray)
         }
     }
+
 
 

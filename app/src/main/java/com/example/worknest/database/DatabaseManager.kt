@@ -98,10 +98,12 @@ class DatabaseManager(context: Context) {
 
     // Expense Operations
     fun insertExpense(name: String, category: String, amount: Double, date: String) {
+        val roundedAmount = String.format("%.2f", amount).toDouble()
+
         val values = ContentValues().apply {
             put("name", name)
             put("category", category)
-            put("amount", amount)
+            put("amount", roundedAmount)
             put("date", date)
         }
         db.insert("expenses", null, values)
@@ -114,11 +116,11 @@ class DatabaseManager(context: Context) {
             val id = cursor.getInt(0)
             val name = cursor.getString(1)
             val category = cursor.getString(2)
-            val amount = cursor.getDouble(3)
+            val amount = String.format("%.2f", cursor.getDouble(3)).toDouble()
             val date = cursor.getString(4)
             expenseList.add(Expense(id, name, category, amount, date))
         }
         cursor.close()
-        return expenseList
+          return expenseList
     }
 }
