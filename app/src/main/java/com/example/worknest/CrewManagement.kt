@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -218,8 +219,7 @@ fun AddCrewDialog(
     availability: String,
     onAvailabilityChange: (String) -> Unit
 ) {
-    val availableRoles = listOf("Manager", "Chef", "Sous Chef", "Pastry Chef", "Line Cook", "Bartender", "Server", "Dishwasher", "Cashier")
-    val availableOptions = listOf("Available", "Unavailable") // Added Available/Unavailable options
+    val availableOptions = listOf("Available", "Unavailable")
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -233,19 +233,10 @@ fun AddCrewDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
+
                 Text("Role:")
-                availableRoles.forEach { availableRole ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = role == availableRole,
-                            onClick = { onRoleChange(availableRole) }
-                        )
-                        Text(availableRole, modifier = Modifier.padding(start = 8.dp))
-                    }
-                }
+                RolePriorityDropdown(selectedRole = role, onRoleSelected = onRoleChange)
+
                 Spacer(modifier = Modifier.height(8.dp))
                 Text("Availability:")
                 availableOptions.forEach { option ->
@@ -292,8 +283,9 @@ fun EditCrewDialog(
     onDismiss: () -> Unit,
     onEditCrew: (String, String, String) -> Unit
 ) {
-    val availableRoles = listOf("Waiter", "Chef", "Manager", "Cashier", "Dishwasher")
-    val availableOptions = listOf("Available", "Unavailable") // Added Available/Unavailable options
+    val availableRoles = listOf("Manager", "Chef", "Sous Chef", "Pastry Chef", "Line Cook", "Bartender", "Server", "Dishwasher", "Cashier")
+    val availableOptions = listOf("Available", "Unavailable")
+
     var name by remember { mutableStateOf(crewMember.name) }
     var role by remember { mutableStateOf(crewMember.role) }
     var availability by remember { mutableStateOf(crewMember.availability) }
@@ -310,19 +302,10 @@ fun EditCrewDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
+
                 Text("Role:")
-                availableRoles.forEach { availableRole ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = role == availableRole,
-                            onClick = { role = availableRole }
-                        )
-                        Text(availableRole, modifier = Modifier.padding(start = 8.dp))
-                    }
-                }
+                RolePriorityDropdown(selectedRole = role, onRoleSelected = { role = it })
+
                 Spacer(modifier = Modifier.height(8.dp))
                 Text("Availability:")
                 availableOptions.forEach { option ->
@@ -357,4 +340,48 @@ fun EditCrewDialog(
             }
         }
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RolePriorityDropdown(selectedRole: String, onRoleSelected: (String) -> Unit) {
+    val roles = listOf("Manager", "Chef", "Sous Chef", "Pastry Chef", "Line Cook", "Bartender", "Server", "Dishwasher", "Cashier")
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded },
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        OutlinedTextField(
+            value = selectedRole,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Select Role") },
+            trailingIcon = {
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = null
+                )
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor()
+        )
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            roles.forEach { role ->
+                DropdownMenuItem(
+                    text = { Text(role) },
+                    onClick = {
+                        onRoleSelected(role)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
 }
