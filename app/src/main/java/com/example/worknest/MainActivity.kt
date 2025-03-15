@@ -49,7 +49,6 @@ fun WorkNestApp(dbManager: DatabaseManager) {
     val allTasks by remember { mutableStateOf(dbManager.getAllTasks()) }
     val pendingTasksCount = allTasks.count { !it.completed }
     val completedTasksCount = allTasks.count { it.completed }
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -78,7 +77,7 @@ fun BottomNavigationBar() {
     NavigationBar {
         NavigationBarItem(
             selected = false,
-            onClick = { context.startActivity(Intent(context, CrewManagement::class.java)) },
+            onClick = { context.startActivity(Intent(context, CrewManagement::class.java))},
             icon = { Icon(Icons.Filled.Person, contentDescription = "Crew Management") },
             label = { Text("Crew") }
         )

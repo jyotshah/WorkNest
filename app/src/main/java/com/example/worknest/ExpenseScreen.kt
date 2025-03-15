@@ -8,8 +8,13 @@
 
     package com.example.worknest
 
+    import android.content.ContentValues
+    import android.content.Context
     import android.net.Uri
+    import android.os.Build
     import android.os.Bundle
+    import android.os.Environment
+    import android.provider.MediaStore
     import androidx.activity.ComponentActivity
     import androidx.activity.compose.setContent
     import androidx.compose.foundation.background
@@ -32,6 +37,7 @@
     import com.example.worknest.models.Expense
     import java.util.Calendar
     import android.widget.Toast
+    import java.io.OutputStream
 
     class ExpenseScreen : ComponentActivity() {
         override fun onCreate(savedInstanceState: Bundle?) {
@@ -73,7 +79,8 @@
                     Icon(Icons.Filled.Add, contentDescription = "Add Expense")
                 }
             }
-        ) { paddingValues ->
+        )
+        { paddingValues ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -178,6 +185,10 @@
 
     @Composable
     fun ExpenseTable(expenses: List<Expense>) {
+        val context = LocalContext.current
+        Button(onClick = { saveExpensesToFile(context, expenses) }) {
+            Text("Download Expenses 📥")
+        }
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(
                 modifier = Modifier
@@ -232,6 +243,54 @@
             Text(text = expense.date, modifier = Modifier.weight(1.2f), color = Color.Gray)
         }
     }
+
+    fun saveExpensesToFile(context: Context, expenses: List<Expense>) {
+        val fileName = "expenses.csv"
+        val fileContent = buildCsv(expenses)
+
+        val resolver = context.contentResolver
+        var outputStream: OutputStream? = null
+
+        try {
+            val uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                // Android 10+ (Scoped Storage)
+                val contentValues = ContentValues().apply {
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+                    put(MediaStore.MediaColumns.MIME_TYPE, "text/csv")
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+                }
+                resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+            } else {
+                // Android 9 and below (Legacy Storage)
+                val file = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                    .resolve(fileName)
+                file.outputStream()
+            }
+
+            outputStream = uri?.let { resolver.openOutputStream(it as Uri) }
+            outputStream?.write(fileContent.toByteArray())
+
+            Toast.makeText(context, "Expenses saved to Downloads folder", Toast.LENGTH_LONG).show()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(context, "Failed to save file", Toast.LENGTH_SHORT).show()
+        } finally {
+            outputStream?.close()
+        }
+    }
+
+    fun buildCsv(expenses: List<Expense>): String {
+        val builder = StringBuilder()
+        builder.append("Expense Name,Category,Amount,Date\n") // CSV Header
+
+        for (expense in expenses) {
+            builder.append("${expense.name},${expense.category},${expense.amount},${expense.date}\n")
+        }
+
+        return builder.toString()
+    }
+
+
 
 
 
