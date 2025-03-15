@@ -245,50 +245,48 @@
     }
 
     fun saveExpensesToFile(context: Context, expenses: List<Expense>) {
-        val fileName = "expenses.csv"
-        val fileContent = buildCsv(expenses)
+        val fileName = "Expenses_Report.txt"
+
+        // Build text content
+        val columnFormat = "%-20s | %-15s | %-10s | %-12s\n"
+        val stringBuilder = StringBuilder()
+        stringBuilder.append(columnFormat.format("Expense Name", "Category", "Amount", "Date"))
+        stringBuilder.append("-------------------------------------------------------------\n")
+
+        for (expense in expenses) {
+            stringBuilder.append(columnFormat.format(expense.name, expense.category, "$${expense.amount}", expense.date))
+        }
+
+        val fileContent = stringBuilder.toString()
 
         val resolver = context.contentResolver
         var outputStream: OutputStream? = null
 
         try {
-            val uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                // Android 10+ (Scoped Storage)
-                val contentValues = ContentValues().apply {
-                    put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
-                    put(MediaStore.MediaColumns.MIME_TYPE, "text/csv")
-                    put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
-                }
-                resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
-            } else {
-                // Android 9 and below (Legacy Storage)
-                val file = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-                    .resolve(fileName)
-                file.outputStream()
+            //Saving to the Downloads folder
+            val contentValues = ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+                put(MediaStore.MediaColumns.MIME_TYPE, "text/plain")
+                put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
             }
 
-            outputStream = uri?.let { resolver.openOutputStream(it as Uri) }
-            outputStream?.write(fileContent.toByteArray())
+            val uri = resolver.insert(MediaStore.Files.getContentUri("external"), contentValues)
+            if (uri != null) {
+                outputStream = resolver.openOutputStream(uri)
+                outputStream?.write(fileContent.toByteArray())
 
-            Toast.makeText(context, "Expenses saved to Downloads folder", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Expenses file downloaded to Downloads 📄", Toast.LENGTH_LONG).show()
+            } else {
+                Toast.makeText(context, "Failed to create file", Toast.LENGTH_SHORT).show()
+            }
         } catch (e: Exception) {
             e.printStackTrace()
-            Toast.makeText(context, "Failed to save file", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Download failed", Toast.LENGTH_SHORT).show()
         } finally {
             outputStream?.close()
         }
     }
 
-    fun buildCsv(expenses: List<Expense>): String {
-        val builder = StringBuilder()
-        builder.append("Expense Name,Category,Amount,Date\n") // CSV Header
-
-        for (expense in expenses) {
-            builder.append("${expense.name},${expense.category},${expense.amount},${expense.date}\n")
-        }
-
-        return builder.toString()
-    }
 
 
 
