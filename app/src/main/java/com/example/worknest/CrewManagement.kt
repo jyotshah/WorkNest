@@ -12,6 +12,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -100,6 +101,8 @@ fun CrewListScreen(
     var role by remember { mutableStateOf("") }
     var availability by remember { mutableStateOf("") }
 
+    var selectedCrewMember by remember { mutableStateOf<CrewMember?>(null) } // To hold selected crew member details
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -137,7 +140,8 @@ fun CrewListScreen(
                     CrewMemberCard(
                         crewMember = crewMember,
                         onDeleteCrewClick = { onDeleteCrewClick(crewMember, {}) },
-                        onEditCrewClick = { crewMemberToEdit = it }
+                        onEditCrewClick = { crewMemberToEdit = it },
+                        onCardClick = { selectedCrewMember = it } // Handle card click
                     )
                 }
             }
@@ -168,6 +172,26 @@ fun CrewListScreen(
                     }
                 )
             }
+
+            // Display crew member details in a dialog when clicked
+            selectedCrewMember?.let { crew ->
+                AlertDialog(
+                    onDismissRequest = { selectedCrewMember = null },
+                    title = { Text("Crew Member Details") },
+                    text = {
+                        Column {
+                            Text("Name: ${crew.name}", fontWeight = FontWeight.Bold)
+                            Text("Role: ${crew.role}")
+                            Text("Availability: ${crew.availability}")
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = { selectedCrewMember = null }) {
+                            Text("Close")
+                        }
+                    }
+                )
+            }
         }
     }
 }
@@ -178,10 +202,14 @@ fun CrewListScreen(
 fun CrewMemberCard(
     crewMember: CrewMember,
     onDeleteCrewClick: (CrewMember) -> Unit,
-    onEditCrewClick: (CrewMember) -> Unit
+    onEditCrewClick: (CrewMember) -> Unit,
+    onCardClick: (CrewMember) -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .clickable { onCardClick(crewMember) }, // Detect click on the card
         colors = CardDefaults.cardColors(containerColor = Color(0xFFE0F2F1)),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
@@ -190,7 +218,9 @@ fun CrewMemberCard(
             Text("Role: ${crewMember.role}")
             Text("Availability: ${crewMember.availability}", color = Color(0xFF004D40))
             Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 Button(onClick = { onEditCrewClick(crewMember) }) {
@@ -385,3 +415,4 @@ fun RolePriorityDropdown(selectedRole: String, onRoleSelected: (String) -> Unit)
         }
     }
 }
+

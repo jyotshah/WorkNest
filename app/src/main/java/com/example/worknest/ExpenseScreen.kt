@@ -31,6 +31,7 @@
     import com.example.worknest.database.DatabaseManager
     import com.example.worknest.models.Expense
     import java.util.Calendar
+    import android.widget.Toast
 
     class ExpenseScreen : ComponentActivity() {
         override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,6 +43,7 @@
             }
         }
     }
+
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
@@ -93,6 +95,7 @@
                     dbManager.insertExpense(newExpense.name, newExpense.category, newExpense.amount, newExpense.date)
                     expenses = dbManager.getAllExpenses() // Refresh list
                     showDialog = false
+                    Toast.makeText(context, "Expense added successfully!", Toast.LENGTH_SHORT).show()
                 },
                 onDismiss = { showDialog = false }
             )
@@ -138,6 +141,9 @@
                 Button(onClick = {
                     if (name.isNotEmpty() && category.isNotEmpty() && date.isNotEmpty()) {
                         onAddExpense(Expense(0, name, category, amount.toDouble(), date))
+                    } else {
+                        Toast.makeText(context, "⚠️ All fields are required!", Toast.LENGTH_SHORT).show()
+
                     }
                 }) {
                     Text("Add")
@@ -182,7 +188,7 @@
             ) {
                 TableHeader("📝 Expense", Modifier.weight(2f))
                 TableHeader("📂 Category", Modifier.weight(1.5f))
-                TableHeader("\uD83D\uDCB5 Amount", Modifier.weight(1f))
+                TableHeader("\uD83D\uDCB5 Amount", Modifier.weight(1.5f))
                 TableHeader("\uD83D\uDCC6 Date", Modifier.weight(1.2f))
             }
 
@@ -219,7 +225,7 @@
             Text(text = expense.category, modifier = Modifier.weight(1.5f), color = Color(0xFF004D40))
             Text(
                 text = "$${"%.2f".format(expense.amount)}", // Ensures 2 decimal places
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1.5f),
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF00796B)
             )

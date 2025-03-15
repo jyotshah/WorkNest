@@ -1,5 +1,11 @@
+/*
+Students Name : Jyot Shah & Ashwini Gunaga
+Students Number : 8871717 & 8888180
+Assignment : A01
+Date : 2/13/2025
+File : MainActivity.kt
+*/
 package com.example.worknest
-
 import android.os.Bundle
 import android.content.Intent
 import androidx.activity.ComponentActivity
