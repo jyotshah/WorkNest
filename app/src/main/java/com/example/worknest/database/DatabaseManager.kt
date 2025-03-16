@@ -7,6 +7,7 @@ File : DatabaseManager.kt
 */
 package com.example.worknest.database
 
+import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
@@ -20,40 +21,57 @@ class DatabaseManager(context: Context) {
     private val db: SQLiteDatabase = dbHelper.writableDatabase
 
     // Crew Operations
-    fun insertCrew(name: String, role: String, availability: String) {
+    fun insertCrew(name: String, role: String, availability: String, linkedInUrl: String) {
         val values = ContentValues().apply {
             put("name", name)
             put("role", role)
             put("availability", availability)
+            put("linkedInUrl", linkedInUrl)
         }
         db.insert("crew", null, values)
     }
 
-    fun updateCrew(id: Int, name: String, role: String, availability: String) {
-        val values = ContentValues().apply {
-            put("name", name)
-            put("role", role)
-            put("availability", availability)
-        }
-        db.update("crew", values, "id = ?", arrayOf(id.toString()))
-    }
-
+    @SuppressLint("Range")
     fun getAllCrew(): List<CrewMember> {
         val crewList = mutableListOf<CrewMember>()
-        val cursor: Cursor = db.rawQuery("SELECT * FROM crew", null)
+        val cursor: Cursor = db.query(
+            "crew", arrayOf("id", "name", "role", "availability", "linkedInUrl"),
+            null, null, null, null, null
+        )
+
+        val nameIndex = cursor.getColumnIndex("name")
+        val roleIndex = cursor.getColumnIndex("role")
+        val availabilityIndex = cursor.getColumnIndex("availability")
+        val linkedInUrlIndex = cursor.getColumnIndex("linkedInUrl")
+
         while (cursor.moveToNext()) {
-            val id = cursor.getInt(0)
-            val name = cursor.getString(1)
-            val role = cursor.getString(2)
-            val availability = cursor.getString(3)
-            crewList.add(CrewMember(id, name, role, availability))
+            if (nameIndex >= 0 && roleIndex >= 0 && availabilityIndex >= 0 && linkedInUrlIndex >= 0) {
+                val crewMember = CrewMember(
+                    id = cursor.getInt(cursor.getColumnIndex("id")),
+                    name = cursor.getString(nameIndex),
+                    role = cursor.getString(roleIndex),
+                    availability = cursor.getString(availabilityIndex),
+                    linkedInUrl = cursor.getString(linkedInUrlIndex)
+                )
+                crewList.add(crewMember)
+            }
         }
         cursor.close()
         return crewList
     }
 
+    fun updateCrew(id: Int, name: String, role: String, availability: String, linkedInUrl: String) {
+        val values = ContentValues().apply {
+            put("name", name)
+            put("role", role)
+            put("availability", availability)
+            put("linkedInUrl", linkedInUrl)
+        }
+        db.update("crew", values, "id = ?", arrayOf(id.toString()))
+    }
+
     fun deleteCrew(id: Int) {
-        db.delete("crew", "id=?", arrayOf(id.toString()))
+        db.delete("crew", "id = ?", arrayOf(id.toString()))
     }
 
     // Task Operations
@@ -121,6 +139,6 @@ class DatabaseManager(context: Context) {
             expenseList.add(Expense(id, name, category, amount, date))
         }
         cursor.close()
-          return expenseList
+        return expenseList
     }
 }

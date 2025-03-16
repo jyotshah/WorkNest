@@ -15,12 +15,14 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
 
     override fun onCreate(db: SQLiteDatabase) {
         // Create Crew table
+
         db.execSQL(
             "CREATE TABLE crew (" +
                     "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     "name TEXT NOT NULL, " +
                     "role TEXT NOT NULL, " +
-                    "availability TEXT NOT NULL)"
+                    "availability TEXT NOT NULL,"+
+                    "linkedInUrl TEXT) "
         )
 
         // Create Tasks table

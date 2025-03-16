@@ -30,17 +30,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.worknest.database.DatabaseManager
 import com.example.worknest.models.CrewMember
+import android.content.Intent
+import android.net.Uri
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
 
-// Data class representing  crew member
-data class CrewMember(val id: Int, val name: String, var role: String, val availability: String)
+// Data class representing crew member
+data class CrewMember(val id: Int, val name: String, var role: String, val availability: String, val linkedInUrl: String?)
 
 class CrewManagement : ComponentActivity() {
     private lateinit var dbManager: DatabaseManager
     private val crewList = mutableStateListOf<CrewMember>()
 
-
-    // Function: onCreate
-    // Description: Initializes the application and the UI content
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         dbManager = DatabaseManager(this)
@@ -50,28 +51,22 @@ class CrewManagement : ComponentActivity() {
         setContent {
             CrewListScreen(
                 crewList = crewList,
-
-                onAddCrewClick = { name, role, availability, onCrewCountChange ->
-                    val newCrew = CrewMember(0, name, role, availability)
-                    dbManager.insertCrew(name, role, availability)
+                onAddCrewClick = { name, role, availability, linkedInUrl, onCrewCountChange ->
+                    val newCrew = CrewMember(0, name, role, availability, linkedInUrl)
+                    dbManager.insertCrew(name, role, availability, linkedInUrl?:"")
                     crewList.add(newCrew)
-                    onCrewCountChange()  // Update the crew count after adding
+                    onCrewCountChange()
                     Toast.makeText(this, "$name added", Toast.LENGTH_SHORT).show()
                 },
-
                 onDeleteCrewClick = { crewMember, onCrewCountChange ->
                     dbManager.deleteCrew(crewMember.id)
                     crewList.remove(crewMember)
-                    onCrewCountChange()  // Update the crew count after deleting
+                    onCrewCountChange()
                     Toast.makeText(this, "${crewMember.name} deleted", Toast.LENGTH_SHORT).show()
                 },
-
-                onEditCrewClick = { id, newName, newRole, newAvailability ->
-                    // Update the database
-                    dbManager.updateCrew(id, newName, newRole, newAvailability)
-
-                    // Find the crew member in the local list and update it
-                    val updatedCrew = CrewMember(id, newName, newRole, newAvailability)
+                onEditCrewClick = { id, newName, newRole, newAvailability, newLinkedInUrl ->
+                    dbManager.updateCrew(id, newName, newRole, newAvailability, newLinkedInUrl?:"")
+                    val updatedCrew = CrewMember(id, newName, newRole, newAvailability, newLinkedInUrl)
                     val index = crewList.indexOfFirst { it.id == id }
                     if (index != -1) {
                         crewList[index] = updatedCrew
@@ -80,8 +75,6 @@ class CrewManagement : ComponentActivity() {
                 }
             )
         }
-        crewList.clear()
-        crewList.addAll(dbManager.getAllCrew())
     }
 }
 
@@ -92,109 +85,96 @@ class CrewManagement : ComponentActivity() {
 fun CrewListScreen(
     crewList: MutableList<CrewMember>,
     onDeleteCrewClick: (CrewMember, () -> Unit) -> Unit,
-    onAddCrewClick: (String, String, String, () -> Unit) -> Unit,
-    onEditCrewClick: (Int, String, String, String) -> Unit
+    onAddCrewClick: (String, String, String, String?, () -> Unit) -> Unit,
+    onEditCrewClick: (Int, String, String, String, String?) -> Unit
 ) {
     var showDialog by remember { mutableStateOf(false) }
     var crewMemberToEdit by remember { mutableStateOf<CrewMember?>(null) }
+    var selectedCrewMember by remember { mutableStateOf<CrewMember?>(null) }
     var name by remember { mutableStateOf("") }
     var role by remember { mutableStateOf("") }
     var availability by remember { mutableStateOf("") }
+    var linkedInUrl by remember { mutableStateOf("") }
+    val context = LocalContext.current
 
-    var selectedCrewMember by remember { mutableStateOf<CrewMember?>(null) } // To hold selected crew member details
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("👥 Crew Management", fontWeight = FontWeight.Bold, fontSize = 20.sp) },
-                colors = TopAppBarDefaults.mediumTopAppBarColors(
-                    containerColor = Color(0xFF00796B),
-                    titleContentColor = Color.White
-                ),
-                actions = {
-                    IconButton(onClick = { showDialog = true }) {
-                        Icon(imageVector = Icons.Default.Add,
-                            contentDescription = "Add Crew Member",
-                            tint = Color.White,
-                            modifier = Modifier.size(32.dp))
-                    }
-                }
-            )
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(Color(0xFFE0F2F1), Color(0xFFB2DFDB))
-                    )
-                )
-                .padding(padding)
-                .padding(16.dp)
-        ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                items(crewList) { crewMember ->
-                    CrewMemberCard(
-                        crewMember = crewMember,
-                        onDeleteCrewClick = { onDeleteCrewClick(crewMember, {}) },
-                        onEditCrewClick = { crewMemberToEdit = it },
-                        onCardClick = { selectedCrewMember = it } // Handle card click
-                    )
+    Scaffold(topBar = {
+        TopAppBar(
+            title = { Text("👥 Crew Management", fontWeight = FontWeight.Bold, fontSize = 20.sp) },
+            colors = TopAppBarDefaults.mediumTopAppBarColors(
+                containerColor = Color(0xFF00796B),
+                titleContentColor = Color.White
+            ),
+            actions = {
+                IconButton(onClick = { showDialog = true }) {
+                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add Crew Member", tint = Color.White, modifier = Modifier.size(32.dp))
                 }
             }
-
-            if (showDialog) {
-                AddCrewDialog(
-                    onDismiss = { showDialog = false },
-                    onAddCrew = { name, role, availability ->
-                        onAddCrewClick(name, role, availability, {})
-                        showDialog = false
-                    },
-                    name = name,
-                    onNameChange = { name = it },
-                    role = role,
-                    onRoleChange = { role = it },
-                    availability = availability,
-                    onAvailabilityChange = { availability = it }
-                )
-            }
-
-            crewMemberToEdit?.let { crew ->
-                EditCrewDialog(
-                    crewMember = crew,
-                    onDismiss = { crewMemberToEdit = null },
-                    onEditCrew = { updatedName, updatedRole, updatedAvailability ->
-                        onEditCrewClick(crew.id, updatedName, updatedRole, updatedAvailability)
-                        crewMemberToEdit = null
-                    }
-                )
-            }
-
-            // Display crew member details in a dialog when clicked
-            selectedCrewMember?.let { crew ->
-                AlertDialog(
-                    onDismissRequest = { selectedCrewMember = null },
-                    title = { Text("Crew Member Details") },
-                    text = {
-                        Column {
-                            Text("Name: ${crew.name}", fontWeight = FontWeight.Bold)
-                            Text("Role: ${crew.role}")
-                            Text("Availability: ${crew.availability}")
-                        }
-                    },
-                    confirmButton = {
-                        TextButton(onClick = { selectedCrewMember = null }) {
-                            Text("Close")
-                        }
-                    }
+        )
+    }) { padding ->
+        LazyColumn(modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
+            items(crewList) { crewMember ->
+                CrewMemberCard(
+                    crewMember = crewMember,
+                    onDeleteCrewClick = { onDeleteCrewClick(crewMember, {}) },
+                    onEditCrewClick = { crewMemberToEdit = it },
+                    onLinkedInClick = { linkedInUrl -> openLinkedInProfile(context, linkedInUrl) },
+                    onCardClick = { selectedCrewMember = it }
                 )
             }
         }
     }
+
+    // Show dialog if a crew member is selected
+    selectedCrewMember?.let { crew ->
+        AlertDialog(
+            onDismissRequest = { selectedCrewMember = null },
+            title = { Text("Crew Member Details") },
+            text = {
+                Column {
+                    Text("Name: ${crew.name}", fontWeight = FontWeight.Bold)
+                    Text("Role: ${crew.role}")
+                    Text("Availability: ${crew.availability}")
+                    crew.linkedInUrl?.let {
+                        Text("LinkedIn: $it", color = Color.Blue, modifier = Modifier.clickable { openLinkedInProfile(context, it) })
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { selectedCrewMember = null }) { Text("Close") }
+            }
+        )
+    }
+
+    if (showDialog) {
+        AddCrewDialog(
+            onDismiss = { showDialog = false },
+            onAddCrew = { name, role, availability, linkedInUrl ->
+                onAddCrewClick(name, role, availability, linkedInUrl) { showDialog = false }
+            },
+            name = name,
+            onNameChange = { name = it }, // Update the state when the name changes
+            role = role,
+            onRoleChange = { role = it }, // Update the state when the role changes
+            availability = availability,
+            onAvailabilityChange = { availability = it }, // Update the state when availability changes
+            linkedInUrl = linkedInUrl,
+            onLinkedInUrlChange = { linkedInUrl = it } // Update the state when LinkedIn URL changes
+        )
+    }
+
+    // Open Edit Crew Dialog if crewMemberToEdit is not null
+    crewMemberToEdit?.let { crew ->
+        EditCrewDialog(
+            crewMember = crew,
+            onDismiss = { crewMemberToEdit = null },
+            onEditCrew = { newName, newRole, newAvailability, newLinkedInUrl ->
+                onEditCrewClick(crew.id, newName, newRole, newAvailability, newLinkedInUrl)
+                crewMemberToEdit = null
+            }
+        )
+    }
 }
+
 
 // Function: CrewMemberCard
 // Description: Displays information about a crew member with edit and delete options
@@ -203,32 +183,27 @@ fun CrewMemberCard(
     crewMember: CrewMember,
     onDeleteCrewClick: (CrewMember) -> Unit,
     onEditCrewClick: (CrewMember) -> Unit,
+    onLinkedInClick: (String) -> Unit,
     onCardClick: (CrewMember) -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
-            .clickable { onCardClick(crewMember) }, // Detect click on the card
+    Card(modifier = Modifier
+        .fillMaxWidth()
+        .padding(vertical = 4.dp)
+        .clickable { onCardClick(crewMember) }, // Trigger onCardClick when card is clicked
         colors = CardDefaults.cardColors(containerColor = Color(0xFFE0F2F1)),
         elevation = CardDefaults.cardElevation(4.dp)
-    ) {
+    ){
         Column(modifier = Modifier.padding(16.dp)) {
             Text("Name: ${crewMember.name}", fontWeight = FontWeight.Bold)
             Text("Role: ${crewMember.role}")
             Text("Availability: ${crewMember.availability}", color = Color(0xFF004D40))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                Button(onClick = { onEditCrewClick(crewMember) }) {
-                    Text("Edit")
-                }
-                Button(onClick = { onDeleteCrewClick(crewMember) }, colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) {
-                    Text("Delete")
-                }
+            crewMember.linkedInUrl?.let {
+                Text("View LinkedIn", color = Color.Blue, modifier = Modifier.clickable { onLinkedInClick(it) })
+
+            }
+            Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+                Button(onClick = { onEditCrewClick(crewMember) }) { Text("Edit") }
+                Button(onClick = { onDeleteCrewClick(crewMember) }, colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) { Text("Delete") }
             }
         }
     }
@@ -241,13 +216,15 @@ fun CrewMemberCard(
 @Composable
 fun AddCrewDialog(
     onDismiss: () -> Unit,
-    onAddCrew: (String, String, String) -> Unit,
+    onAddCrew: (String, String, String, String?) -> Unit,
     name: String,
     onNameChange: (String) -> Unit,
     role: String,
     onRoleChange: (String) -> Unit,
     availability: String,
-    onAvailabilityChange: (String) -> Unit
+    onAvailabilityChange: (String) -> Unit,
+    linkedInUrl: String,
+    onLinkedInUrlChange: (String) -> Unit
 ) {
     val availableOptions = listOf("Available", "Unavailable")
 
@@ -282,13 +259,21 @@ fun AddCrewDialog(
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
+
+                TextField(
+                    value = linkedInUrl,
+                    onValueChange = onLinkedInUrlChange,
+                    label = { Text("LinkedIn URL (optional)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
             }
         },
         confirmButton = {
             TextButton(
                 onClick = {
                     if (name.isNotBlank() && role.isNotBlank() && availability.isNotBlank()) {
-                        onAddCrew(name, role, availability)
+                        onAddCrew(name, role, availability, linkedInUrl)
                     }
                 }
             ) {
@@ -304,6 +289,7 @@ fun AddCrewDialog(
 }
 
 
+
 // Function: EditCrewDialog
 // Description: Box for editing an existing crew member's details.
 @OptIn(ExperimentalMaterial3Api::class)
@@ -311,7 +297,7 @@ fun AddCrewDialog(
 fun EditCrewDialog(
     crewMember: CrewMember,
     onDismiss: () -> Unit,
-    onEditCrew: (String, String, String) -> Unit
+    onEditCrew: (String, String, String, String?) -> Unit
 ) {
     val availableRoles = listOf("Manager", "Chef", "Sous Chef", "Pastry Chef", "Line Cook", "Bartender", "Server", "Dishwasher", "Cashier")
     val availableOptions = listOf("Available", "Unavailable")
@@ -319,6 +305,7 @@ fun EditCrewDialog(
     var name by remember { mutableStateOf(crewMember.name) }
     var role by remember { mutableStateOf(crewMember.role) }
     var availability by remember { mutableStateOf(crewMember.availability) }
+    var linkedInUrl by remember { mutableStateOf(crewMember.linkedInUrl ?: "") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -351,13 +338,21 @@ fun EditCrewDialog(
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
+
+                TextField(
+                    value = linkedInUrl,
+                    onValueChange = { linkedInUrl = it },
+                    label = { Text("LinkedIn URL (optional)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
             }
         },
         confirmButton = {
             TextButton(
                 onClick = {
                     if (name.isNotBlank() && role.isNotBlank() && availability.isNotBlank()) {
-                        onEditCrew(name, role, availability)
+                        onEditCrew(name, role, availability, linkedInUrl)
                     }
                 }
             ) {
@@ -416,3 +411,8 @@ fun RolePriorityDropdown(selectedRole: String, onRoleSelected: (String) -> Unit)
     }
 }
 
+fun openLinkedInProfile(context: Context, url: String) {
+    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+    context.startActivity(intent)
+}

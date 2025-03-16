@@ -63,6 +63,8 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.material3)
 
+    implementation ("androidx.compose.ui:ui-text:1.7.8")
+    implementation ("androidx.compose.material3:material3:1.3.1")
     implementation ("io.coil-kt:coil-compose:2.1.0")
     implementation ("androidx.compose.foundation:foundation:1.0.0")
 
