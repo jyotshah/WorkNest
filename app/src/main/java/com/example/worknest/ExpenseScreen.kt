@@ -1,20 +1,14 @@
     /*
     Students Name : Jyot Shah & Ashwini Gunaga
     Students Number : 8871717 & 8888180
-    Assignment : A01
-    Date : 2/13/2025
+    Assignment : A02
+    Date : 3/16/2025
     File : ExpenseScreen.kt
     */
 
     package com.example.worknest
-
-    import android.content.ContentValues
     import android.content.Context
-    import android.net.Uri
-    import android.os.Build
     import android.os.Bundle
-    import android.os.Environment
-    import android.provider.MediaStore
     import androidx.activity.ComponentActivity
     import androidx.activity.compose.setContent
     import androidx.compose.foundation.background
@@ -37,7 +31,8 @@
     import com.example.worknest.models.Expense
     import java.util.Calendar
     import android.widget.Toast
-    import java.io.OutputStream
+    import android.util.Log
+
 
     class ExpenseScreen : ComponentActivity() {
         override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,6 +51,7 @@
     fun ShowExpenses() {
         val context = LocalContext.current
         val dbManager = remember { DatabaseManager(context) }
+        var fileContent by remember { mutableStateOf("") }
 
         var expenses by remember { mutableStateOf(dbManager.getAllExpenses()) }
         var showDialog by remember { mutableStateOf(false) }
@@ -93,8 +89,38 @@
                     .padding(16.dp)
             ) {
                 ExpenseTable(expenses)
+                Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+                    Button(onClick = {
+                        val fileUrl =
+                            "https://drive.google.com/uc?export=download&id=1D6dpf9hy5uuxmZf0Ry9qM0ZxHAVNp-p4"
+                        val fileName = "restaurant_expenses.txt"
+
+                        Toast.makeText(
+                            context,
+                            "Downloading file to Downloads folder...",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        Log.d("ExpenseScreen", "Starting download from $fileUrl")
+
+                        DownloadExpenseFileTask(context, fileUrl, fileName) {
+                            // Chain the Read Task
+                            ReadExpenseFileTask(context, fileName) { content ->
+                                fileContent = content
+                            }.execute()
+                        }.execute()
+                    }) {
+                        Text("⬇\uFE0F Previous Expenses")
+                    }
+
+                    if (fileContent.isNotEmpty()) {
+                        ShowFileContentDialog(context, fileContent) {
+                            fileContent = ""  // Reset after viewing
+                        }
+                    }
+                }
             }
         }
+
 
         if (showDialog) {
             AddExpenseDialog(
@@ -186,9 +212,7 @@
     @Composable
     fun ExpenseTable(expenses: List<Expense>) {
         val context = LocalContext.current
-        Button(onClick = { saveExpensesToFile(context, expenses) }) {
-            Text("Download Expenses 📥")
-        }
+
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(
                 modifier = Modifier
@@ -244,49 +268,17 @@
         }
     }
 
-    fun saveExpensesToFile(context: Context, expenses: List<Expense>) {
-        val fileName = "Expenses_Report.txt"
-
-        // Build text content
-        val columnFormat = "%-20s | %-15s | %-10s | %-12s\n"
-        val stringBuilder = StringBuilder()
-        stringBuilder.append(columnFormat.format("Expense Name", "Category", "Amount", "Date"))
-        stringBuilder.append("-------------------------------------------------------------\n")
-
-        for (expense in expenses) {
-            stringBuilder.append(columnFormat.format(expense.name, expense.category, "$${expense.amount}", expense.date))
-        }
-
-        val fileContent = stringBuilder.toString()
-
-        val resolver = context.contentResolver
-        var outputStream: OutputStream? = null
-
-        try {
-            //Saving to the Downloads folder
-            val contentValues = ContentValues().apply {
-                put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
-                put(MediaStore.MediaColumns.MIME_TYPE, "text/plain")
-                put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+    @Composable
+    fun ShowFileContentDialog(context: Context, fileContent: String, onDismiss: () -> Unit) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text("Saved Expenses") },
+            text = { Text(fileContent) },
+            confirmButton = {
+                Button(onClick = onDismiss) { Text("OK") }
             }
-
-            val uri = resolver.insert(MediaStore.Files.getContentUri("external"), contentValues)
-            if (uri != null) {
-                outputStream = resolver.openOutputStream(uri)
-                outputStream?.write(fileContent.toByteArray())
-
-                Toast.makeText(context, "Expenses file downloaded to Downloads 📄", Toast.LENGTH_LONG).show()
-            } else {
-                Toast.makeText(context, "Failed to create file", Toast.LENGTH_SHORT).show()
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Toast.makeText(context, "Download failed", Toast.LENGTH_SHORT).show()
-        } finally {
-            outputStream?.close()
-        }
+        )
     }
-
 
 
 
