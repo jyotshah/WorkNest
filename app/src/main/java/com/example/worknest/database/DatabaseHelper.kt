@@ -32,7 +32,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                     "name TEXT NOT NULL, " +
                     "description TEXT NOT NULL, " +
                     "priority TEXT NOT NULL, " +
-                    "completed INTEGER NOT NULL)"
+                    "completed INTEGER NOT NULL," +
+                    "deadline TEXT NOT NULL)"
         )
 
         // Create Expenses table

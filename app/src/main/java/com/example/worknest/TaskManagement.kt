@@ -29,6 +29,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.example.worknest.database.DatabaseManager
 import com.example.worknest.models.Task
+import android.app.DatePickerDialog
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
+
 
 class TaskManagement : ComponentActivity() {
     private lateinit var dbManager: DatabaseManager
@@ -47,14 +52,14 @@ class TaskManagement : ComponentActivity() {
                     taskList.remove(task)
                     Toast.makeText(this, "${task.name} deleted", Toast.LENGTH_SHORT).show()
                 },
-                onAddTaskClick = { name, description, priority ->
-                    val newTask = Task(0, name, description, priority, false)
-                    dbManager.insertTask(name, description, priority, false)
+                onAddTaskClick = { name, description, priority, deadline ->
+                    val newTask = Task(0, name, description, priority, false, deadline)
+                    dbManager.insertTask(name, description, priority, false, deadline)
                     taskList.add(newTask)
                     Toast.makeText(this, "$name added", Toast.LENGTH_SHORT).show()
                 },
-                onEditTaskClick = { id, newName, newDescription, newPriority ->
-                    val updatedTask = Task(id, newName, newDescription, newPriority, false)
+                onEditTaskClick = { id, newName, newDescription, newPriority, newDeadline ->
+                    val updatedTask = Task(id, newName, newDescription, newPriority, false, newDeadline)
                     dbManager.updateTask(updatedTask)
                     val index = taskList.indexOfFirst { it.id == id }
                     if (index != -1) {
@@ -82,8 +87,8 @@ class TaskManagement : ComponentActivity() {
 fun TaskManagementScreen(
     tasks: List<Task>,
     onDeleteTaskClick: (Task) -> Unit,
-    onAddTaskClick: (String, String, String) -> Unit,
-    onEditTaskClick: (Int, String, String, String) -> Unit,
+    onAddTaskClick: (String, String, String, String) -> Unit,
+    onEditTaskClick: (Int, String, String, String, String) -> Unit,
     onTaskCompleted: (Task, Boolean) -> Unit
 ) {
     var showDialog by remember { mutableStateOf(false) }
@@ -130,11 +135,11 @@ fun TaskManagementScreen(
                 AddOrEditTaskDialog(
                     task = taskToEdit,
                     onDismiss = { showDialog = false; taskToEdit = null },
-                    onConfirm = { name, description, priority ->
+                    onConfirm = { name, description, priority, deadline ->
                         if (taskToEdit == null) {
-                            onAddTaskClick(name, description, priority)
+                            onAddTaskClick(name, description, priority, deadline)
                         } else {
-                            onEditTaskClick(taskToEdit!!.id, name, description, priority)
+                            onEditTaskClick(taskToEdit!!.id, name, description, priority, deadline)
                         }
                         showDialog = false
                         taskToEdit = null
@@ -167,6 +172,7 @@ fun TaskCard(
             Text(text = "Task: ${task.name}", style = MaterialTheme.typography.bodyLarge)
             Text(text = "Description: ${task.description}", style = MaterialTheme.typography.bodyMedium)
             Text(text = "Priority: ${task.priority}", color = Color.Blue, style = MaterialTheme.typography.bodyMedium)
+            Text(text = "Deadline: ${task.deadline}", color = Color.DarkGray, style = MaterialTheme.typography.bodyMedium)
         }
         Spacer(modifier = Modifier.width(8.dp))
         Button(onClick = onEdit) { Text("Edit") }
@@ -183,11 +189,13 @@ fun TaskCard(
 fun AddOrEditTaskDialog(
     task: Task?,
     onDismiss: () -> Unit,
-    onConfirm: (String, String, String) -> Unit
+    onConfirm: (String, String, String, String) -> Unit
 ) {
+    val context = LocalContext.current
     var name by remember { mutableStateOf(task?.name ?: "") }
     var description by remember { mutableStateOf(task?.description ?: "") }
     var priority by remember { mutableStateOf(task?.priority ?: "Medium") }
+    var deadline by remember { mutableStateOf(task?.deadline ?: "Select Date") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -197,10 +205,28 @@ fun AddOrEditTaskDialog(
                 OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Task Name") })
                 OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Description") })
                 PriorityDropdown(priority) { priority = it }
+
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("Deadline:")
+                Button(onClick = {
+                    val calendar = Calendar.getInstance()
+                    DatePickerDialog(
+                        context,
+                        { _, year, month, dayOfMonth ->
+                            val formattedDate = "$dayOfMonth/${month + 1}/$year"
+                            deadline = formattedDate
+                        },
+                        calendar.get(Calendar.YEAR),
+                        calendar.get(Calendar.MONTH),
+                        calendar.get(Calendar.DAY_OF_MONTH)
+                    ).show()
+                }) {
+                    Text(text = deadline)
+                }
             }
         },
         confirmButton = {
-            Button(onClick = { onConfirm(name, description, priority) }) { Text("Save") }
+            Button(onClick = { onConfirm(name, description, priority, deadline) }) { Text("Save") }
         },
         dismissButton = {
             Button(onClick = onDismiss) { Text("Cancel") }

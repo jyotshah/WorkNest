@@ -75,12 +75,13 @@ class DatabaseManager(context: Context) {
     }
 
     // Task Operations
-    fun insertTask(name: String, description: String, priority: String, completed: Boolean) {
+    fun insertTask(name: String, description: String, priority: String, completed: Boolean, deadline: String) {
         val values = ContentValues().apply {
             put("name", name)
             put("description", description)
             put("priority", priority)
             put("completed", if (completed) 1 else 0)
+            put("deadline", deadline)
         }
         db.insert("tasks", null, values)
     }
@@ -94,7 +95,8 @@ class DatabaseManager(context: Context) {
             val description = cursor.getString(2)
             val priority = cursor.getString(3)
             val completed = cursor.getInt(4) == 1
-            taskList.add(Task(id, name, description, priority, completed))
+            val deadline = cursor.getString(5)
+            taskList.add(Task(id, name, description, priority, completed, deadline))
         }
         cursor.close()
         return taskList
@@ -110,6 +112,7 @@ class DatabaseManager(context: Context) {
             put("description", task.description)
             put("priority", task.priority)
             put("completed", if (task.completed) 1 else 0)
+            put("deadline", task.deadline)
         }
         db.update("tasks", values, "id=?", arrayOf(task.id.toString()))
     }
