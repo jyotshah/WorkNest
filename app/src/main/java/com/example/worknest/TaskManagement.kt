@@ -30,19 +30,57 @@ import androidx.compose.ui.unit.sp
 import com.example.worknest.database.DatabaseManager
 import com.example.worknest.models.Task
 import android.app.DatePickerDialog
-import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Locale
-
+import androidx.work.Constraints
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.ExistingPeriodicWorkPolicy
+import java.util.concurrent.TimeUnit
+import android.util.Log
+import androidx.work.WorkInfo
+import android.content.Context
+import android.Manifest
+import android.os.Build
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.work.OneTimeWorkRequestBuilder
 
 class TaskManagement : ComponentActivity() {
     private lateinit var dbManager: DatabaseManager
     private val taskList = mutableStateListOf<Task>()
 
+    private val requestPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+            if (!isGranted) {
+                Toast.makeText(this, "Notification permission denied!", Toast.LENGTH_SHORT).show()
+            }
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         dbManager = DatabaseManager(this)
         taskList.addAll(dbManager.getAllTasks())
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+        scheduleTaskReminderWorker()
+
+        // Manually trigger the worker for testing
+        val testRequest = OneTimeWorkRequestBuilder<TaskReminderWorker>().build()
+        WorkManager.getInstance(this).enqueue(testRequest)
+
+        val isRunning = isTaskReminderWorkerRunning(this) // Check if worker is running
+        Log.d("TaskManagement", "Worker running: $isRunning") // Log status
+        Toast.makeText(this, if (isRunning) "Worker is running" else "Worker is NOT running", Toast.LENGTH_SHORT).show()
+
+        // Observe the status of the worker to see its current state
+        val workManager = WorkManager.getInstance(this)
+        workManager.getWorkInfosForUniqueWorkLiveData("TaskReminderWork").observe(this) { workInfos ->
+            for (workInfo in workInfos) {
+                Log.d("TaskManagement", "Worker State: ${workInfo.state}")
+            }
+        }
 
         setContent {
             TaskManagementScreen(
@@ -78,6 +116,38 @@ class TaskManagement : ComponentActivity() {
             )
         }
     }
+
+    private fun scheduleTaskReminderWorker() { // Schedules the worker
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val taskReminderRequest = PeriodicWorkRequestBuilder<TaskReminderWorker>(1, TimeUnit.HOURS)
+            .setConstraints(constraints)
+            .build()
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "TaskReminderWork",
+            ExistingPeriodicWorkPolicy.REPLACE,
+            taskReminderRequest
+        )
+
+        Log.d("TaskManagement", "Worker scheduled")
+    }
+
+    private fun isTaskReminderWorkerRunning(context: Context): Boolean {
+        val workManager = WorkManager.getInstance(context)
+        val workInfos = workManager.getWorkInfosForUniqueWork("TaskReminderWork").get()
+
+        for (workInfo in workInfos) {
+            if (workInfo.state == WorkInfo.State.RUNNING || workInfo.state == WorkInfo.State.ENQUEUED) {
+                return true
+            }
+        }
+        return false
+    }
+
+
 }
 
 // Function: TaskManagementScreen

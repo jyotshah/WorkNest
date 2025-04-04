@@ -68,8 +68,7 @@ dependencies {
     implementation ("androidx.compose.material3:material3:1.3.1")
     implementation ("io.coil-kt:coil-compose:2.1.0")
     implementation ("androidx.compose.foundation:foundation:1.0.0")
-    implementation ("androidx.work:work-runtime-ktx:2.7.0")
+    implementation ("androidx.work:work-runtime-ktx:2.8.0")
     implementation ("androidx.core:core-ktx:1.9.0")
     implementation ("androidx.compose.material3:material3:1.0.0")
-
 }

@@ -186,6 +186,8 @@ fun CrewMemberCard(
     onLinkedInClick: (String) -> Unit,
     onCardClick: (CrewMember) -> Unit
 ) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
     Card(modifier = Modifier
         .fillMaxWidth()
         .padding(vertical = 4.dp)
@@ -203,9 +205,33 @@ fun CrewMemberCard(
             }
             Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
                 Button(onClick = { onEditCrewClick(crewMember) }) { Text("Edit") }
-                Button(onClick = { onDeleteCrewClick(crewMember) }, colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) { Text("Delete") }
+                Button(onClick = { showDeleteDialog = true }, colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) {
+                    Text("Delete")
+                }
             }
         }
+    }
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Delete Crew Member") },
+            text = { Text("Are you sure you want to remove this crew member?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDeleteCrewClick(crewMember)
+                        showDeleteDialog = false // Close the dialog after deletion
+                    }
+                ) {
+                    Text("Yes")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("No")
+                }
+            }
+        )
     }
 }
 
