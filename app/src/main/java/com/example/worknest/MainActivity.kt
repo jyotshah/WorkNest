@@ -28,6 +28,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.worknest.database.DatabaseManager
 import com.example.worknest.models.Task
+import android.content.IntentFilter
+import android.content.BroadcastReceiver
+import android.net.ConnectivityManager
+
 
 class MainActivity : ComponentActivity() {
     private lateinit var dbManager: DatabaseManager
@@ -40,6 +44,21 @@ class MainActivity : ComponentActivity() {
             WorkNestApp(dbManager)
         }
     }
+
+    override fun onStart() {
+        super.onStart()
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_BATTERY_LOW)
+            addAction(ConnectivityManager.CONNECTIVITY_ACTION)
+        }
+        registerReceiver(SystemBroadcastReceiver(), filter)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        unregisterReceiver(SystemBroadcastReceiver())
+    }
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
