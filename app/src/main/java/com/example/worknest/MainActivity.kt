@@ -35,6 +35,8 @@ import android.net.ConnectivityManager
 
 class MainActivity : ComponentActivity() {
     private lateinit var dbManager: DatabaseManager
+    private var systemBroadcastReceiver: SystemBroadcastReceiver? = null
+    private var isReceiverRegistered = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,18 +49,24 @@ class MainActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
-        val filter = IntentFilter().apply {
-            addAction(Intent.ACTION_BATTERY_LOW)
-            addAction(ConnectivityManager.CONNECTIVITY_ACTION)
+        if (!isReceiverRegistered) {
+            systemBroadcastReceiver = SystemBroadcastReceiver()
+            val filter = IntentFilter().apply {
+                addAction(Intent.ACTION_BATTERY_LOW)
+                addAction(ConnectivityManager.CONNECTIVITY_ACTION)
+            }
+            registerReceiver(systemBroadcastReceiver, filter)
+            isReceiverRegistered = true
         }
-        registerReceiver(SystemBroadcastReceiver(), filter)
     }
 
     override fun onStop() {
         super.onStop()
-        unregisterReceiver(SystemBroadcastReceiver())
+        if (isReceiverRegistered && systemBroadcastReceiver != null) {
+            unregisterReceiver(systemBroadcastReceiver)
+            isReceiverRegistered = false
+        }
     }
-
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
